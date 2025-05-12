@@ -68,55 +68,15 @@ export const candidateItems = [
   },
 ];
 
-export const blogItems = [
-  {
-    name: "Blog List V1",
-    routePath: "/blog-list-v1",
-  },
-  {
-    name: "Blog List V2",
-    routePath: "/blog-list-v2",
-  },
-  {
-    name: "Blog List V3",
-    routePath: "/blog-list-v3",
-  },
-  {
-    name: "Blog Details",
-    routePath: "/blog-details/1",
-  },
-];
+export const blogItems = {
+  name: "Blog",
+  routePath: "/blog-list-v1",
+};
 
-export const pageItems = [
-  {
-    name: "About",
-    routePath: "/about",
-  },
-  {
-    name: "Pricing",
-    routePath: "/pricing",
-  },
-  {
-    name: "FAQ's",
-    routePath: "/faq",
-  },
-  {
-    name: "Terms",
-    routePath: "/terms",
-  },
-  {
-    name: "Invoice",
-    routePath: "/invoice",
-  },
-  {
-    name: "Contact",
-    routePath: "/contact",
-  },
-  {
-    name: "404",
-    routePath: "/404",
-  },
-];
+export const pageItems = {
+  name: "About",
+  routePath: "/about",
+};
 
 export const shopItems = [
   {

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import {
   blogItems,
-  candidateItems,
   employerItems,
   findJobItems,
   homeItems,
@@ -11,7 +10,6 @@ import {
   shopItems,
 } from "../../data/mainMenuData";
 import {
-  isActiveParent,
   isActiveLink,
   isActiveParentChaild,
 } from "../../utils/linkActiveChecker";
@@ -40,90 +38,26 @@ const HeaderNavContent = () => {
           </li>
           {/* End Company menu item */}
 
-          <li
-            className={`${
-              isActiveParent(candidateItems, usePathname()) ||
-              usePathname()?.split("/")[1] === "candidates-dashboard"
-                ? "current"
-                : ""
-                ? "current"
-                : ""
-            } dropdown`}
-          >
-            <span>Candidates</span>
-            <ul>
-              {candidateItems.map((item) => (
-                <li className="dropdown" key={item.id}>
-                  <span
-                    className={
-                      isActiveParentChaild(item.items, usePathname())
-                        ? "current"
-                        : ""
-                    }
-                  >
-                    {item.title}
-                  </span>
-                  <ul>
-                    {item.items.map((menu, i) => (
-                      <li
-                        className={
-                          isActiveLink(menu.routePath, usePathname())
-                            ? "current"
-                            : ""
-                        }
-                        key={i}
-                      >
-                        <Link href={menu.routePath}>{menu.name}</Link>
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-              <li
-                className={
-                  usePathname()?.includes("/candidates-dashboard/")
-                    ? "current"
-                    : ""
-                }
-              >
-                <Link href="/candidates-dashboard/dashboard">
-                  Candidates Dashboard
-                </Link>
-              </li>
-            </ul>
+          {/* Blog menu item */}
+          <li className={isActiveLink(blogItems.routePath, usePathname()) ? "current" : ""}>
+            <Link href={blogItems.routePath}>{blogItems.name}</Link>
           </li>
-          {/* End Candidates menu items */}
+          {/* End Blog menu item */}
+
+          {/* About menu item */}
+          <li className={isActiveLink(pageItems.routePath, usePathname()) ? "current" : ""}>
+            <Link href={pageItems.routePath}>{pageItems.name}</Link>
+          </li>
+          {/* End About menu item */}
 
           <li
             className={`${
-              isActiveParentChaild(blogItems, usePathname()) ? "current" : ""
-            } dropdown`}
-          >
-            <span>Blog</span>
-            <ul>
-              {blogItems.map((item, i) => (
-                <li
-                  className={
-                    isActiveLink(item.routePath, usePathname()) ? "current" : ""
-                  }
-                  key={i}
-                >
-                  <Link href={item.routePath}>{item.name}</Link>
-                </li>
-              ))}
-            </ul>
-          </li>
-          {/* End Blog menu items */}
-
-          <li
-            className={`${
-              isActiveParentChaild(pageItems, usePathname()) ||
               isActiveParentChaild(shopItems[0].items, usePathname())
                 ? "current "
                 : ""
             } dropdown`}
           >
-            <span>Pages</span>
+            <span>Shop</span>
             <ul>
               {shopItems.map((item) => (
                 <li className="dropdown" key={item.id}>
@@ -152,19 +86,9 @@ const HeaderNavContent = () => {
                   </ul>
                 </li>
               ))}
-              {pageItems.map((item, i) => (
-                <li
-                  className={
-                    isActiveLink(item.routePath, usePathname()) ? "current" : ""
-                  }
-                  key={i}
-                >
-                  <Link href={item.routePath}>{item.name}</Link>
-                </li>
-              ))}
             </ul>
           </li>
-          {/* End Pages menu items */}
+          {/* End Shop menu items */}
         </ul>
       </nav>
     </>

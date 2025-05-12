@@ -1,27 +1,12 @@
 import Blog6 from "../../blog/Blog6";
-import LoginPopup from "../../common/form/login/LoginPopup";
-import FooterDefault from "../../footer/common-footer";
-import DefaulHeader from "../../header/DefaulHeader";
-import MobileMenu from "../../header/MobileMenu";
+import CommonLayout from "../../../layout/CommonLayout";
 import BlogPagination from "../blog-sidebar/BlogPagination";
 import BlogSidebar from "../blog-sidebar";
 import Breadcrumb from "../../common/Breadcrumb";
 
 const index = () => {
   return (
-    <>
-      {/* <!-- Header Span --> */}
-      <span className="header-span"></span>
-
-      <LoginPopup />
-      {/* End Login Popup Modal */}
-
-      <DefaulHeader />
-      {/* <!--End Main Header --> */}
-
-      <MobileMenu />
-      {/* End MobileMenu */}
-
+    <CommonLayout>
       <Breadcrumb title="Blog" meta="Blog" />
       {/* <!--End Page Title--> */}
 
@@ -51,10 +36,7 @@ const index = () => {
         </div>
       </div>
       {/* <!-- End Sidebar Container --> */}
-
-      <FooterDefault footerStyle="alternate5" />
-      {/* <!-- End Main Footer --> */}
-    </>
+    </CommonLayout>
   );
 };
 

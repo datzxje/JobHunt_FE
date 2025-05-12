@@ -1,8 +1,5 @@
-import LoginPopup from "../../common/form/login/LoginPopup";
 import Partner from "../../common/partner/Partner";
-import FooterDefault from "../../footer/common-footer";
-import DefaulHeader from "../../header/DefaulHeader";
-import MobileMenu from "../../header/MobileMenu";
+import CommonLayout from "../../../layout/CommonLayout";
 import Funfact from "../../fun-fact-counter/Funfact";
 import ImgBox from "./ImgBox";
 import IntroDescriptions from "./IntroDescriptions";
@@ -14,19 +11,7 @@ import Image from "next/image";
 
 const index = () => {
   return (
-    <>
-      {/* <!-- Header Span --> */}
-      <span className="header-span"></span>
-
-      <LoginPopup />
-      {/* End Login Popup Modal */}
-
-      <DefaulHeader />
-      {/* <!--End Main Header --> */}
-
-      <MobileMenu />
-      {/* End MobileMenu */}
-
+    <CommonLayout>
       <Breadcrumb title="About Us" meta="About Us" />
       {/* <!--End Page Title--> */}
 
@@ -114,10 +99,7 @@ const index = () => {
         </div>
       </section>
       {/* <!-- End Clients Section--> */}
-
-      <FooterDefault />
-      {/* <!-- End Main Footer --> */}
-    </>
+    </CommonLayout>
   );
 };
 

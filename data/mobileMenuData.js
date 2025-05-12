@@ -45,106 +45,18 @@ module.exports = [
   },
   {
     id: 5,
-    label: "Candidates List",
-    items: [
-      {
-        name: "Candidates List V1",
-        routePath: "/candidates-list-v1",
-      },
-      {
-        name: "Candidates List V2",
-        routePath: "/candidates-list-v2",
-      },
-      {
-        name: "Candidates List V3",
-        routePath: "/candidates-list-v3",
-      },
-      {
-        name: "Candidates List V4",
-        routePath: "/candidates-list-v4",
-      },
-      {
-        name: "Candidates List V5",
-        routePath: "/candidates-list-v5",
-      },
-    ],
+    name: "Blog",
+    routePath: "/blog-list-v1",
+    type: "link"
   },
   {
     id: 6,
-    label: "Candidates Single",
-    items: [
-      {
-        name: "Candidates Single V1",
-        routePath: "/candidates-single-v1/1",
-      },
-      {
-        name: "Candidates Single V2",
-        routePath: "/candidates-single-v2/2",
-      },
-      {
-        name: "Candidates Single V3",
-        routePath: "/candidates-single-v3/3",
-      },
-    ],
+    name: "About",
+    routePath: "/about",
+    type: "link"
   },
   {
     id: 7,
-    label: "Blog",
-    items: [
-      {
-        name: "Blog List V1",
-        routePath: "/blog-list-v1",
-      },
-      {
-        name: "Blog List V2",
-        routePath: "/blog-list-v2",
-      },
-      {
-        name: "Blog List V3",
-        routePath: "/blog-list-v3",
-      },
-      {
-        name: "Blog Details",
-        routePath: "/blog-details/1",
-      },
-    ],
-  },
-  {
-    id: 8,
-    label: "Pages",
-    items: [
-      {
-        name: "About",
-        routePath: "/about",
-      },
-      {
-        name: "Pricing",
-        routePath: "/pricing",
-      },
-      {
-        name: "FAQ's",
-        routePath: "/faq",
-      },
-      {
-        name: "Terms",
-        routePath: "/terms",
-      },
-      {
-        name: "Invoice",
-        routePath: "/invoice",
-      },
-      {
-        name: "Contact",
-        routePath: "/contact",
-      },
-      {
-        name: "404",
-        routePath: "/404",
-      },
-    ],
-  },
-  {
-    id: 9,
     label: "Shop",
     items: [
       {
@@ -178,17 +90,13 @@ module.exports = [
     ],
   },
   {
-    id: 10,
+    id: 8,
     label: "Dashboard",
     items: [
       {
         name: "Employers Dashboard",
         routePath: "/employers-dashboard/dashboard",
-      },
-      {
-        name: "Candidates Dashboard",
-        routePath: "/candidates-dashboard/dashboard",
-      },
+      }
     ],
   },
 ];
