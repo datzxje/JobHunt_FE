@@ -4,7 +4,7 @@ import Home from "@/components/home-7";
 
 export const metadata = {
   title: "JobHunt ",
-  description: "Superio - Job Borad React NextJS Template",
+  description: "JobHunt - Employment Marketplace",
 };
 
 const index = () => {

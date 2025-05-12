@@ -1,5 +1,3 @@
-
-
 'use client'
 
 import topCompany from "../../data/topCompany";
@@ -56,7 +54,7 @@ const TopCompany = () => {
               />
             </figure>
             <h4 className="name">
-              <Link href={`/employers-single-v1/${company.id}`}>
+              <Link href={`/company/single/${company.id}`}>
                 {company.name}
               </Link>
             </h4>
@@ -64,7 +62,7 @@ const TopCompany = () => {
               <i className="flaticon-map-locator"></i> {company.location}
             </div>
             <Link
-              href={`/employers-single-v1/${company.id}`}
+              href={`/company/single/${company.id}`}
               className="theme-btn btn-style-three"
             >
               {company.jobNumber} Open Position

@@ -11,8 +11,8 @@ import Image from "next/image";
 import CommonLayout from "@/layout/CommonLayout";
 
 export const metadata = {
-  title: "Job Single Dyanmic V3 || Superio - Job Borad React NextJS Template",
-  description: "Superio - Job Borad React NextJS Template",
+  title: "Job Single Dyanmic V3 || JobHunt - Employment Marketplace",
+  description: "JobHunt - Employment Marketplace",
 };
 
 const JobSingleDynamicV3 = ({ params }) => {

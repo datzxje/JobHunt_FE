@@ -40,7 +40,7 @@ module.exports = [
   {
     id: 4,
     name: "Company",
-    routePath: "/employers-list-v2",
+    routePath: "/company/list",
     type: "link"
   },
   {

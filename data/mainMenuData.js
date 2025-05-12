@@ -18,7 +18,7 @@ export const findJobItems = [
 
 export const employerItems = {
   name: "Company",
-  routePath: "/employers-list-v2",
+  routePath: "/company/list",
 };
 
 export const candidateItems = [

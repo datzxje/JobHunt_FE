@@ -1,27 +1,26 @@
 import dynamic from "next/dynamic";
-import jobs from "@/data/job-featured";
+import employersInfo from "@/data/topCompany";
 import LoginPopup from "@/components/common/form/login/LoginPopup";
 import FooterDefault from "@/components/footer/common-footer";
 import DefaulHeader from "@/components/header/DefaulHeader";
 import MobileMenu from "@/components/header/MobileMenu";
-import RelatedJobs from "@/components/job-single-pages/related-jobs/RelatedJobs";
-import JobOverView from "@/components/job-single-pages/job-overview/JobOverView";
-import JobSkills from "@/components/job-single-pages/shared-components/JobSkills";
-import CompnayInfo from "@/components/job-single-pages/shared-components/CompanyInfo";
+import JobDetailsDescriptions from "@/components/employer-single-pages/shared-components/JobDetailsDescriptions";
+import RelatedJobs from "@/components/employer-single-pages/related-jobs/RelatedJobs";
 import MapJobFinder from "@/components/job-listing-pages/components/MapJobFinder";
-import SocialTwo from "@/components/job-single-pages/social/SocialTwo";
-import JobDetailsDescriptions from "@/components/job-single-pages/shared-components/JobDetailsDescriptions";
-import ApplyJobModalContent from "@/components/job-single-pages/shared-components/ApplyJobModalContent";
+import Social from "@/components/employer-single-pages/social/Social";
+import PrivateMessageBox from "@/components/employer-single-pages/shared-components/PrivateMessageBox";
 import Image from "next/image";
 
 export const metadata = {
-  title: "Job Single Dyanmic V1 || Superio - Job Borad React NextJS Template",
-  description: "Superio - Job Borad React NextJS Template",
+  title: "Company Single || JobHunt - Employment Marketplace",
+  description: "JobHunt - Employment Marketplace",
 };
 
-const JobSingleDynamicV1 = ({ params }) => {
+const CompanySingle = ({ params }) => {
   const id = params.id;
-  const company = jobs.find((item) => item.id == id) || jobs[0];
+
+  const employer =
+    employersInfo.find((item) => item.id == id) || employersInfo[0];
 
   return (
     <>
@@ -39,6 +38,7 @@ const JobSingleDynamicV1 = ({ params }) => {
 
       {/* <!-- Job Detail Section --> */}
       <section className="job-detail-section">
+        {/* <!-- Upper Box --> */}
         <div className="upper-box">
           <div className="auto-container">
             <div className="job-block-seven">
@@ -47,74 +47,71 @@ const JobSingleDynamicV1 = ({ params }) => {
                   <span className="company-logo">
                     <Image
                       width={100}
-                      height={98}
-                      src={company?.logo}
+                      height={100}
+                      src={employer?.img}
                       alt="logo"
                     />
                   </span>
-                  <h4>{company?.jobTitle}</h4>
+                  <h4>{employer?.name}</h4>
 
                   <ul className="job-info">
                     <li>
-                      <span className="icon flaticon-briefcase"></span>
-                      {company?.company}
+                      <span className="icon flaticon-map-locator"></span>
+                      {employer?.location}
                     </li>
                     {/* compnay info */}
                     <li>
-                      <span className="icon flaticon-map-locator"></span>
-                      {company?.location}
+                      <span className="icon flaticon-briefcase"></span>
+                      {employer?.jobType}
                     </li>
                     {/* location info */}
                     <li>
-                      <span className="icon flaticon-clock-3"></span>{" "}
-                      {company?.time}
+                      <span className="icon flaticon-telephone-1"></span>
+                      {employer?.phone}
                     </li>
                     {/* time info */}
                     <li>
-                      <span className="icon flaticon-money"></span>{" "}
-                      {company?.salary}
+                      <span className="icon flaticon-mail"></span>
+                      {employer?.email}
                     </li>
                     {/* salary info */}
                   </ul>
                   {/* End .job-info */}
 
                   <ul className="job-other-info">
-                    {company?.jobType?.map((val, i) => (
-                      <li key={i} className={`${val.styleClass}`}>
-                        {val.type}
-                      </li>
-                    ))}
+                    <li className="time">Open Jobs – {employer.jobNumber}</li>
                   </ul>
                   {/* End .job-other-info */}
                 </div>
                 {/* End .content */}
 
                 <div className="btn-box">
-                  <a
-                    href="#"
+                  <button
                     className="theme-btn btn-style-one"
                     data-bs-toggle="modal"
-                    data-bs-target="#applyJobModal"
+                    data-bs-target="#privateMessage"
                   >
-                    Apply For Job
-                  </a>
+                    Private Message
+                  </button>
                   <button className="bookmark-btn">
                     <i className="flaticon-bookmark"></i>
                   </button>
                 </div>
-                {/* End apply for job btn */}
+                {/* End btn-box */}
 
                 {/* <!-- Modal --> */}
                 <div
                   className="modal fade"
-                  id="applyJobModal"
+                  id="privateMessage"
                   tabIndex="-1"
                   aria-hidden="true"
                 >
                   <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                     <div className="apply-modal-content modal-content">
                       <div className="text-center">
-                        <h3 className="title">Apply for this job</h3>
+                        <h3 className="title">
+                          Send message to {employer.name}
+                        </h3>
                         <button
                           type="button"
                           className="closed-modal"
@@ -124,7 +121,7 @@ const JobSingleDynamicV1 = ({ params }) => {
                       </div>
                       {/* End modal-header */}
 
-                      <ApplyJobModalContent />
+                      <PrivateMessageBox />
                       {/* End PrivateMessageBox */}
                     </div>
                     {/* End .send-private-message-wrapper */}
@@ -138,31 +135,27 @@ const JobSingleDynamicV1 = ({ params }) => {
         </div>
         {/* <!-- Upper Box --> */}
 
+        {/* <!-- job-detail-outer--> */}
         <div className="job-detail-outer">
           <div className="auto-container">
             <div className="row">
               <div className="content-column col-lg-8 col-md-12 col-sm-12">
+                {/*  job-detail */}
                 <JobDetailsDescriptions />
-                {/* End jobdetails content */}
+                {/* End job-detail */}
 
-                <div className="other-options">
-                  <div className="social-share">
-                    <h5>Share this job</h5>
-                    <SocialTwo />
-                  </div>
-                </div>
-                {/* <!-- Other Options --> */}
-
+                {/* <!-- Related Jobs --> */}
                 <div className="related-jobs">
                   <div className="title-box">
-                    <h3>Related Jobs</h3>
+                    <h3>3 Others jobs available</h3>
                     <div className="text">
                       2020 jobs live - 293 added today.
                     </div>
                   </div>
-                  {/* End title box */}
+                  {/* End .title-box */}
 
                   <RelatedJobs />
+                  {/* End RelatedJobs */}
                 </div>
                 {/* <!-- Related Jobs --> */}
               </div>
@@ -170,64 +163,59 @@ const JobSingleDynamicV1 = ({ params }) => {
 
               <div className="sidebar-column col-lg-4 col-md-12 col-sm-12">
                 <aside className="sidebar">
-                  <div className="sidebar-widget">
-                    {/* <!-- Job Overview --> */}
-                    <h4 className="widget-title">Job Overview</h4>
-                    <JobOverView />
-
-                    {/* <!-- Map Widget --> */}
-                    <h4 className="widget-title mt-5">Job Location</h4>
-                    <div className="widget-content">
-                      <div className="map-outer">
-                        <div style={{ height: "300px", width: "100%" }}>
-                          <MapJobFinder />
-                        </div>
-                      </div>
-                    </div>
-                    {/* <!--  Map Widget --> */}
-
-                    <h4 className="widget-title">Job Skills</h4>
-                    <div className="widget-content">
-                      <JobSkills />
-                    </div>
-                    {/* <!-- Job Skills --> */}
-                  </div>
-                  {/* End .sidebar-widget */}
-
                   <div className="sidebar-widget company-widget">
                     <div className="widget-content">
-                      <div className="company-title">
-                        <div className="company-logo">
-                          <Image
-                            width={54}
-                            height={53}
-                            src={company.logo}
-                            alt="resource"
-                          />
-                        </div>
-                        <h5 className="company-name">{company.company}</h5>
-                        <a href="#" className="profile-link">
-                          View company profile
-                        </a>
-                      </div>
-                      {/* End company title */}
-
-                      <CompnayInfo />
+                      {/*  compnay-info */}
+                      <ul className="company-info mt-0">
+                        <li>
+                          Primary industry: <span>Software</span>
+                        </li>
+                        <li>
+                          Company size: <span>501-1,000</span>
+                        </li>
+                        <li>
+                          Founded in: <span>2011</span>
+                        </li>
+                        <li>
+                          Phone: <span>{employer?.phone}</span>
+                        </li>
+                        <li>
+                          Email: <span>{employer?.email}</span>
+                        </li>
+                        <li>
+                          Location: <span>{employer?.location}</span>
+                        </li>
+                        <li>
+                          Social media:
+                          <Social />
+                        </li>
+                      </ul>
+                      {/* End compnay-info */}
 
                       <div className="btn-box">
                         <a
                           href="#"
-                          target="_blank"
-                          rel="noopener noreferrer"
                           className="theme-btn btn-style-three"
+                          style={{ textTransform: "lowercase" }}
                         >
-                          {company?.link}
+                          {employer?.email}
                         </a>
                       </div>
-                      {/* End btn-box */}
                     </div>
                   </div>
-                  {/* End .company-widget */}
+                  {/* End company-widget */}
+
+                  <div className="sidebar-widget">
+                    {/* <!-- Map Widget --> */}
+                    <h4 className="widget-title">Job Location</h4>
+                    <div className="widget-content">
+                      <div style={{ height: "300px", width: "100%" }}>
+                        <MapJobFinder />
+                      </div>
+                    </div>
+                    {/* <!--  Map Widget --> */}
+                  </div>
+                  {/* End sidebar-widget */}
                 </aside>
                 {/* End .sidebar */}
               </div>
@@ -245,6 +233,4 @@ const JobSingleDynamicV1 = ({ params }) => {
   );
 };
 
-export default dynamic(() => Promise.resolve(JobSingleDynamicV1), {
-  ssr: false,
-});
+export default dynamic(() => Promise.resolve(CompanySingle), { ssr: false }); 

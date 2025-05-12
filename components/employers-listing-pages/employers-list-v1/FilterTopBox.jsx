@@ -1,5 +1,3 @@
-
-
 'use client'
 
 import Link from "next/link";
@@ -83,7 +81,7 @@ const FilterTopBox = () => {
                 />
               </span>
               <h4>
-                <Link href={`/employers-single-v1/${company.id}`}>
+                <Link href={`/company/single/${company.id}`}>
                   {company.name}
                 </Link>
               </h4>

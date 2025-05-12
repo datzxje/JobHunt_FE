@@ -2,8 +2,8 @@ import Wrapper from "@/layout/Wrapper";
 import Home from "@/components/home-7";
 
 export const metadata = {
-  title: "Superio - Job Borad React NextJS Template",
-  description: "Superio - Job Borad React NextJS Template",
+  title: "JobHunt - Employment Marketplace",
+  description: "JobHunt - Employment Marketplace",
 };
 
 export default function page() {
