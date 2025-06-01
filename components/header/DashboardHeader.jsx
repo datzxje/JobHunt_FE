@@ -3,16 +3,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import employerMenuData from "../../data/employerMenuData";
+import { employerMenuData, candidatesMenuData } from "../../data/menuData";
 import HeaderNavContent from "./HeaderNavContent";
 import { isActiveLink } from "../../utils/linkActiveChecker";
 import { usePathname } from "next/navigation";
-
+import { useAuth } from "../../context/AuthContext";
 
 const DashboardHeader = () => {
     const [navbar, setNavbar] = useState(false);
-
-
+    const { user, logout } = useAuth();
+    const pathname = usePathname();
 
     const changeBackground = () => {
         if (window.scrollY >= 0) {
@@ -24,7 +24,40 @@ const DashboardHeader = () => {
 
     useEffect(() => {
         window.addEventListener("scroll", changeBackground);
+        return () => {
+            window.removeEventListener("scroll", changeBackground);
+        };
     }, []);
+
+    // Determine which menu to show based on user role
+    const getMenuData = () => {
+        if (!user) return [];
+        
+        const userRole = user.role || user.userType || 'CANDIDATE';
+        
+        if (userRole.toUpperCase() === 'EMPLOYER') {
+            return employerMenuData;
+        } else {
+            return candidatesMenuData;
+        }
+    };
+
+    const currentMenuData = getMenuData();
+
+    // Get user display name
+    const getUserDisplayName = () => {
+        if (user?.name) return user.name;
+        if (user?.firstname && user?.lastname) return `${user.firstname} ${user.lastname}`;
+        if (user?.firstName && user?.lastName) return `${user.firstName} ${user.lastName}`;
+        return "My Account";
+    };
+
+    const handleLogout = () => {
+        console.log("🔘 DashboardHeader handleLogout clicked");
+        console.log("🔘 About to call logout() function");
+        logout();
+        console.log("🔘 logout() function called");
+    };
 
     return (
         // <!-- Main Header-->
@@ -81,20 +114,27 @@ const DashboardHeader = () => {
                                 <Image
                                     alt="avatar"
                                     className="thumb"
-                                    src="/images/resource/company-6.png"
+                                    src={user?.avatar || "/images/resource/company-6.png"}
                                     width={50}
                                     height={50}
                                 />
-                                <span className="name">My Account</span>
+                                <span className="name">
+                                    {getUserDisplayName()}
+                                    {user?.role && (
+                                        <small className="d-block text-muted" style={{fontSize: '10px'}}>
+                                            {user.role.toLowerCase()}
+                                        </small>
+                                    )}
+                                </span>
                             </a>
 
                             <ul className="dropdown-menu">
-                                {employerMenuData.map((item) => (
+                                {currentMenuData?.filter(item => item.name !== 'Logout' && item.name !== 'Delete Profile').map((item) => (
                                     <li
                                         className={`${
                                             isActiveLink(
                                                 item.routePath,
-                                                usePathname()
+                                                pathname
                                             )
                                                 ? "active"
                                                 : ""
@@ -109,6 +149,11 @@ const DashboardHeader = () => {
                                         </Link>
                                     </li>
                                 ))}
+                                <li className="mb-1">
+                                    <button onClick={handleLogout} className="dropdown-item">
+                                        <i className="la la-sign-out"></i> Logout
+                                    </button>
+                                </li>
                             </ul>
                         </div>
                         {/* End dropdown */}

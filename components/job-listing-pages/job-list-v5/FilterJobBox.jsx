@@ -1,6 +1,8 @@
 'use client'
 
 import Link from "next/link";
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import jobs from "../../../data/job-featured";
 import Pagination from "../components/Pagination";
 import JobSelect from "../components/JobSelect";
@@ -32,8 +34,16 @@ const FilterJobBox = () => {
   } = jobList || {};
 
   const { sort, perPage } = jobSort;
-
   const dispatch = useDispatch();
+  const searchParams = useSearchParams();
+
+  // Handle URL parameters for automatic filtering
+  useEffect(() => {
+    const jobTypeParam = searchParams.get('jobType');
+    if (jobTypeParam === 'temporary') {
+      dispatch(addJobTypeSelect('temporary'));
+    }
+  }, [searchParams, dispatch]);
 
   // keyword filter on title
   const keywordFilter = (item) =>

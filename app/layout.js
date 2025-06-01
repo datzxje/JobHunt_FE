@@ -8,6 +8,7 @@ import { Provider } from "react-redux";
 import { store } from "../store/store";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import { AuthProvider } from "../context/AuthContext";
 
 if (typeof window !== "undefined") {
   require("bootstrap/dist/js/bootstrap");
@@ -43,25 +44,27 @@ export default function RootLayout({ children }) {
 
       <body>
         <Provider store={store}>
-          <div className="page-wrapper">
-            {children}
+          <AuthProvider>
+            <div className="page-wrapper">
+              {children}
 
-            {/* Toastify */}
-            <ToastContainer
-              position="bottom-right"
-              autoClose={500}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="colored"
-            />
-            {/* <!-- Scroll To Top --> */}
-            <ScrollToTop />
-          </div>
+              {/* Toastify */}
+              <ToastContainer
+                position="bottom-right"
+                autoClose={500}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+              />
+              {/* <!-- Scroll To Top --> */}
+              <ScrollToTop />
+            </div>
+          </AuthProvider>
         </Provider>
       </body>
     </html>

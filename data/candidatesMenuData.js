@@ -1,4 +1,4 @@
-module.exports = [
+const candidatesMenuData = [
   {
     id: 1,
     name: "Dashboard",
@@ -73,7 +73,7 @@ module.exports = [
     id: 11,
     name: "Logout",
     icon: "la-sign-out",
-    routePath: "/login",
+    routePath: "/",
     active: "",
   },
   {
@@ -84,3 +84,5 @@ module.exports = [
     active: "",
   },
 ];
+
+export default candidatesMenuData;

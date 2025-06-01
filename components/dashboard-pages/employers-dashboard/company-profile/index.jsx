@@ -74,6 +74,16 @@ const index = () => {
                                 </div>
                             </div>
                             {/* <!-- Ls widget --> */}
+
+                            {/* <!-- Save Button Section --> */}
+                            <div className="ls-widget">
+                                <div className="widget-content" style={{ textAlign: 'center', padding: '30px 0' }}>
+                                    <button className="theme-btn btn-style-one" style={{ fontSize: '16px', padding: '12px 40px' }}>
+                                        Save Company Profile
+                                    </button>
+                                </div>
+                            </div>
+                            {/* <!-- End Save Button Section --> */}
                         </div>
                     </div>
                     {/* End .row */}

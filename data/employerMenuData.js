@@ -1,4 +1,4 @@
-module.exports = [
+const employerMenuData = [
   {
     id: 1,
     name: "Dashboard",
@@ -8,79 +8,74 @@ module.exports = [
   },
   {
     id: 2,
-    name: "Company Profile",
-    icon: "la-user-tie",
-    routePath: "/employers-dashboard/company-profile",
-    active: "",
-  },
-  {
-    id: 3,
     name: "Post a New Job",
     icon: "la-paper-plane",
     routePath: "/employers-dashboard/post-jobs",
     active: "",
   },
   {
-    id: 4,
+    id: 3,
     name: "Manage Jobs",
     icon: "la-briefcase",
     routePath: "/employers-dashboard/manage-jobs",
     active: "",
   },
   {
-    id: 5,
+    id: 4,
     name: "All Applicants",
     icon: "la-file-invoice",
     routePath: "/employers-dashboard/all-applicants",
     active: "",
   },
   {
-    id: 6,
+    id: 5,
     name: "Shortlisted Resumes",
     icon: "la-bookmark-o",
     routePath: "/employers-dashboard/shortlisted-resumes",
     active: "",
   },
   {
-    id: 7,
+    id: 6,
     name: "Packages",
     icon: "la-box",
     routePath: "/employers-dashboard/packages",
     active: "",
   },
   {
-    id: 8,
+    id: 7,
     name: "Messages",
     icon: "la-comment-o",
     routePath: "/employers-dashboard/messages",
     active: "",
   },
   {
-    id: 9,
+    id: 8,
     name: "Resume Alerts",
     icon: "la-bell",
     routePath: "/employers-dashboard/resume-alerts",
     active: "",
   },
   {
-    id: 10,
+    id: 9,
     name: "Change Password",
     icon: "la-lock",
     routePath: "/employers-dashboard/change-password",
     active: "",
   },
   {
-    id: 11,
+    id: 10,
     name: "Logout",
     icon: "la-sign-out",
-    routePath: "/login",
+    routePath: "/",
     active: "",
   },
   {
-    id: 12,
+    id: 11,
     name: "Delete Profile",
     icon: "la-trash",
     routePath: "/",
     active: "",
   },
 ];
+
+export default employerMenuData;

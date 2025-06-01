@@ -10,7 +10,7 @@ module.exports = [
     jobType: [
       {
         styleClass: "time",
-        type: "Full Time",
+        type: "Fulltime",
       },
       {
         styleClass: "privacy",
@@ -154,7 +154,7 @@ module.exports = [
     jobType: [
       {
         styleClass: "time",
-        type: "Full Time",
+        type: "Fulltime",
       },
       {
         styleClass: "privacy",
@@ -298,7 +298,7 @@ module.exports = [
     jobType: [
       {
         styleClass: "time",
-        type: "Full Time",
+        type: "Fulltime",
       },
       {
         styleClass: "required",
@@ -422,7 +422,7 @@ module.exports = [
     jobType: [
       {
         styleClass: "time",
-        type: "Full Time",
+        type: "Fulltime",
       },
       {
         styleClass: "required",
@@ -554,7 +554,7 @@ module.exports = [
     jobType: [
       {
         styleClass: "time",
-        type: "Full Time",
+        type: "Fulltime",
       },
       {
         styleClass: "privacy",
@@ -684,7 +684,7 @@ module.exports = [
     jobType: [
       {
         styleClass: "time",
-        type: "Full Time",
+        type: "Fulltime",
       },
       {
         styleClass: "privacy",
@@ -836,7 +836,7 @@ module.exports = [
     jobType: [
       {
         styleClass: "time",
-        type: "Full Time",
+        type: "Fulltime",
       },
       {
         styleClass: "privacy",
@@ -985,7 +985,7 @@ module.exports = [
     jobType: [
       {
         styleClass: "time",
-        type: "Full Time",
+        type: "Fulltime",
       },
       {
         styleClass: "privacy",
@@ -1137,7 +1137,7 @@ module.exports = [
     jobType: [
       {
         styleClass: "time",
-        type: "Full Time",
+        type: "Fulltime",
       },
       {
         styleClass: "privacy",

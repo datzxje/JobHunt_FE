@@ -1,13 +1,14 @@
-
 'use client'
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import HeaderNavContent from "../header/HeaderNavContent";
 import Image from "next/image";
+import { useAuth } from "../../context/AuthContext";
 
 const Header = () => {
   const [navbar, setNavbar] = useState(false);
+  const { isLoggedIn, user, logout } = useAuth();
 
   const changeBackground = () => {
     if (window.scrollY >= 10) {
@@ -20,6 +21,11 @@ const Header = () => {
   useEffect(() => {
     window.addEventListener("scroll", changeBackground);
   }, []);
+
+  const handleLogout = () => {
+    console.log("Header handleLogout called");
+    logout();
+  };
 
   return (
     // <!-- Main Header-->
@@ -53,22 +59,36 @@ const Header = () => {
           {/* End .nav-outer */}
 
           <div className="outer-box">
-            <div className="btn-box">
-              <a
-                href="#"
-                className="theme-btn btn-style-three call-modal"
-                data-bs-toggle="modal"
-                data-bs-target="#loginPopupModal"
-              >
-                Login / Register
-              </a>
-              <Link
-                href="/employers-dashboard/post-jobs"
-                className="theme-btn btn-style-one"
-              >
-                Job Post
-              </Link>
-            </div>
+            {isLoggedIn ? (
+              // Show logout option when logged in
+              <div className="btn-box">
+                <span className="user-name">Welcome, {user?.name || 'User'}</span>
+                <button
+                  onClick={handleLogout}
+                  className="theme-btn btn-style-three"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              // Show login/register when not logged in
+              <div className="btn-box">
+                <a
+                  href="#"
+                  className="theme-btn btn-style-three call-modal"
+                  data-bs-toggle="modal"
+                  data-bs-target="#loginPopupModal"
+                >
+                  Login / Register
+                </a>
+                <Link
+                  href="/employers-dashboard/post-jobs"
+                  className="theme-btn btn-style-one"
+                >
+                  Job Post
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

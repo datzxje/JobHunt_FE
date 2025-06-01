@@ -6,8 +6,8 @@ const JobFeatured1 = () => {
   return (
     <>
       {jobFeatured.slice(0, 6).map((item) => (
-        <div className="job-block col-lg-6 col-md-12 col-sm-12" key={item.id}>
-          <div className="inner-box">
+        <div className="job-block col-lg-6 col-md-12 col-sm-12" key={item.id} style={{marginBottom: "10px", paddingLeft: "5px", paddingRight: "5px"}}>
+          <div className="inner-box" style={{marginBottom: "0"}}>
             <div className="content">
               <span className="company-logo">
                 <Image

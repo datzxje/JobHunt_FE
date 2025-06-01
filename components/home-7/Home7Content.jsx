@@ -6,6 +6,7 @@ import JobCategorie1 from "../job-categories/JobCategorie1";
 import Filter from "../job-featured/filter-dropdown/Filter";
 import JobFeatured12 from "../job-featured/JobFeatured12";
 import JobFeatured1 from "../job-featured/JobFeatured1";
+import UrgentJobs from "../job-featured/UrgentJobs";
 import Testimonial2 from "../testimonial/Testimonial2";
 import TopCompany2 from "../top-company/TopCompany2";
 import Partner from "../common/partner/Partner";
@@ -17,49 +18,19 @@ const Home7Content = () => {
   return (
     <>
       <Hero7 />
-      {/* End Hero Section */}
-
-      <section className="clients-section-two alternate">
+      
+      {/* Urgent Jobs Section - Positioned prominently */}
+      <section className="urgent-jobs-section" style={{marginTop: "-100px", paddingTop: "120px"}}>
         <div className="auto-container">
-          <div className="sec-title text-center">
-            <h2>Top Companies Hiring at Superio Now</h2>
-            <div className="text">
-              Lorem ipsum dolor sit amet elit, sed do eiusmod tempor
-            </div>
-          </div>
-          {/* End .sec-title */}
-
-          <div className="sponsors-outer" data-aos="fade">
-            {/* <!--Sponsors Carousel--> */}
-            <ul className="sponsors-carousel">
-              <Partner />
-            </ul>
-          </div>
+          <UrgentJobs />
         </div>
       </section>
-      {/* <!-- End Clients Section--> */}
 
-      <section className="job-section">
+      <section className="job-section pt-0" style={{marginTop: "20px"}}>
         <div className="auto-container">
-          <div className="sec-title-outer">
-            <div className="sec-title">
-              <h2>Featured Jobs</h2>
-              <div className="text">
-                Know your worth and find the job that qualify your life
-              </div>
-            </div>
-
-            <div className="select-box-outer">
-              <span className="icon fa fa-angle-down"></span>
-              <Filter />
-            </div>
-          </div>
-          {/* End sec-title-outer */}
-
-          <div className="row " data-aos="fade-up">
+          <div className="row mb-3" data-aos="fade-up">
             <JobFeatured1 />
           </div>
-
           <div className="btn-box">
             <Link
               href="/job-list-v5"
@@ -70,35 +41,13 @@ const Home7Content = () => {
           </div>
         </div>
       </section>
-      {/* End Job Featured Section */}
-
-      <section className="about-section style-two">
-        <div className="auto-container">
-          <div className="row">
-            <About4 />
-          </div>
-
-          {/* <!-- Fun Fact Section --> */}
-          <div className="fun-fact-section">
-            <div className="row">
-              <Funfact />
-            </div>
-          </div>
-          {/* <!-- Fun Fact Section --> */}
-        </div>
-      </section>
-      {/* <!-- End About Section --> */}
-
-      <section className="top-companies">
+      
+      <section className="top-companies" style={{marginTop: "-120px"}}>
         <div className="auto-container">
           <div className="sec-title">
             <h2>Top Company Registered</h2>
-            <div className="text">
-              Some of the companies we have helped recruit excellent applicants
-              over the years.
-            </div>
+            <div className="text">Some of the companies we have helped recruit excellent applicants over the years.</div>
           </div>
-
           <div className="carousel-outer" data-aos="fade-up">
             <div className="companies-carousel">
               <TopCompany2 />
@@ -106,9 +55,23 @@ const Home7Content = () => {
           </div>
         </div>
       </section>
-      {/* <!-- End Top Companies --> */}
 
-      <section className="testimonial-section-two style-two">
+      <section className="about-section style-two" style={{marginTop: "-100px"}}>
+        <div className="auto-container">
+          <div className="row">
+            <About4 />
+          </div>
+          <div className="fun-fact-section">
+            <div className="row">
+              <Funfact />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      
+
+      <section className="testimonial-section-two style-two" style={{marginTop: "-80px"}}>
         <div className="container-fluid">
           <div className="testimonial-left">
             <Image
@@ -118,8 +81,6 @@ const Home7Content = () => {
               alt="testimonial"
             />
           </div>
-          {/* End left img group */}
-
           <div className="testimonial-right">
             <Image
               width={504}
@@ -128,85 +89,49 @@ const Home7Content = () => {
               alt="testimonial"
             />
           </div>
-          {/* End right img group */}
-
           <div className="sec-title text-center">
             <h2>Testimonials From Our Customers</h2>
-            <div className="text">
-              Lorem ipsum dolor sit amet elit, sed do eiusmod tempor
-            </div>
+            <div className="text">Lorem ipsum dolor sit amet elit, sed do eiusmod tempor</div>
           </div>
-          {/* <!-- Sec Title --> */}
-
           <div className="carousel-outer" data-aos="fade-up">
             <div className="testimonial-carousel">
               <Testimonial2 />
             </div>
-            {/* <!-- Testimonial Carousel --> */}
           </div>
         </div>
       </section>
-      {/* <!-- End Testimonial Section --> */}
 
-      <section className="job-categories">
+      <section className="job-categories" style={{marginTop: "-80px"}}>
         <div className="auto-container">
           <div className="sec-title text-center">
             <h2>Popular Job Categories</h2>
             <div className="text">2020 jobs live - 293 added today.</div>
           </div>
-
-          <div
-            className="row "
-            data-aos="fade-up"
-            data-aos-anchor-placement="top-bottom"
-          >
-            {/* <!-- Category Block --> */}
+          <div className="row" data-aos="fade-up" data-aos-anchor-placement="top-bottom">
             <JobCategorie1 />
           </div>
         </div>
       </section>
-      {/* End Job Categorie Section */}
 
-      <section className="job-section style-two">
+      <section className="job-section style-two" style={{marginTop: "-30px"}}>
         <div className="auto-container wow fadeInUp">
           <div className="sec-title text-center">
             <h2>Recent Jobs</h2>
-            <div className="text">
-              Know your worth and find the job that qualify your life
-            </div>
+            <div className="text">Know your worth and find the job that qualify your life</div>
           </div>
           <div className="job-carousel gap-x25">
             <JobFeatured12 />
           </div>
         </div>
       </section>
-      {/* <!-- End Job Section --> */}
 
-      <section className="candidates-section-two">
-        <div className="auto-container">
-          <div className="sec-title">
-            <h2>Featured Candidates</h2>
-            <div className="text">
-              Lorem ipsum dolor sit amet elit, sed do eiusmod tempor
-            </div>
-          </div>
-
-          <div className="row" data-aos="fade-up">
-            <Candidates2 />
-          </div>
-        </div>
-      </section>
-      {/* <!-- End Candidates Section --> */}
-
-      <section className="ads-section">
+      <section className="ads-section" style={{marginTop: "-30px", marginBottom: "-100px"}}>
         <div className="auto-container">
           <div className="row" data-aos="fade-up">
             <AddBlock />
-            {/* <!-- Ads Block --> */}
           </div>
         </div>
       </section>
-      {/* <!-- End Ads Section --> */}
     </>
   );
 };
