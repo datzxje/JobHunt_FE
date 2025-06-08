@@ -48,44 +48,54 @@ const ApplyJobModalContent = ({ jobId }) => {
     try {
       setLoading(true);
       
-      // TODO: Replace with actual API endpoints
+      // Mock API calls - replace with actual API endpoints
       const [jobReqResponse, profileResponse] = await Promise.all([
-        fetch(`/api/jobs/${jobId}/requirements`),
-        fetch(`/api/candidate/profile`)
+        // fetch(`/api/jobs/${jobId}/requirements`),
+        // fetch(`/api/candidate/profile`)
+        new Promise(resolve => setTimeout(() => resolve({
+          data: [
+            { type: "experience", data: { minExperience: "2-3", maxExperience: "5", weight: "8" }},
+            { type: "age", data: { minAge: "25", maxAge: "35", weight: "5" }},
+            { type: "education", data: { minEducation: "Bachelor", weight: "7" }},
+            { type: "skills", data: { skills: [{ value: "React", label: "React" }, { value: "JavaScript", label: "JavaScript" }], weight: "9" }},
+            { type: "languages", data: { languages: [{ value: "English", label: "English" }], weight: "6" }},
+            { type: "salary", data: { minSalary: "50-70K", maxSalary: "100K", weight: "4" }}
+          ]
+        }), 1500)),
+        new Promise(resolve => setTimeout(() => resolve({
+          data: {
+            // Fields that HAVE data (will show ✓ Already provided)
+            experience: "3-5 Years",
+            education: "Bachelor's Degree",
+            skills: [{ value: "React", label: "React" }, { value: "JavaScript", label: "JavaScript" }],
+            
+            // Fields that DON'T have data (will show empty, need to fill)
+            age: "", // No age provided
+            languages: [], // No languages provided  
+            expectedSalary: "" // No salary expectation provided
+          }
+        }), 1500))
       ]);
 
-      const requirements = jobReqResponse.ok ? await jobReqResponse.json() : [];
-      const profile = profileResponse.ok ? await profileResponse.json() : {};
+      const requirements = jobReqResponse.data || [];
+      const profile = profileResponse.data || {};
 
-      setJobRequirements(requirements.data || []);
-      setCandidateProfile(profile.data || {});
+      setJobRequirements(requirements);
+      setCandidateProfile(profile);
       
       // Initialize form data with existing profile data
       setFormData({
-        experience: profile.data?.experience || "",
-        age: profile.data?.age || "",
-        education: profile.data?.education || "",
-        skills: profile.data?.skills || [],
-        languages: profile.data?.languages || [],
-        expectedSalary: profile.data?.expectedSalary || "",
+        experience: profile.experience || "",
+        age: profile.age || "",
+        education: profile.education || "",
+        skills: profile.skills || [],
+        languages: profile.languages || [],
+        expectedSalary: profile.expectedSalary || "",
         message: ""
       });
 
     } catch (error) {
       console.error("Error fetching data:", error);
-      
-      // Fallback when APIs are not ready
-      setJobRequirements([]);
-      setCandidateProfile({});
-      setFormData({
-        experience: "",
-        age: "",
-        education: "",
-        skills: [],
-        languages: [],
-        expectedSalary: "",
-        message: ""
-      });
     } finally {
       setLoading(false);
     }
@@ -108,21 +118,14 @@ const ApplyJobModalContent = ({ jobId }) => {
     };
 
     try {
-      // TODO: Replace with actual API endpoint
-      const response = await fetch('/api/applications', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(applicationData)
-      });
-
-      if (response.ok) {
-        alert("Application submitted successfully!");
-        // Close modal or redirect
-      } else {
-        throw new Error('Failed to submit application');
-      }
+      // Submit application with all collected data
+      // const response = await fetch('/api/applications', {
+      //   method: 'POST',
+      //   body: formData
+      // });
+      
+      console.log("Application submitted:", applicationData);
+      alert("Application submitted successfully!");
       
     } catch (error) {
       console.error("Error submitting application:", error);
