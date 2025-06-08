@@ -9,10 +9,9 @@ const axiosInstance = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  withCredentials: true, // Important: allows cookies to be sent and received
+  withCredentials: true, 
 });
 
-// Interceptor xử lý request
 axiosInstance.interceptors.request.use(
   (config) => {
     const fullUrl = config.baseURL + config.url;
@@ -22,9 +21,7 @@ axiosInstance.interceptors.request.use(
     if (config.params) {
       console.log('Request params:', config.params);
     }
-    
-    console.log('Cookies will be automatically sent and processed by backend CookieAuthenticationFilter');
-    
+        
     return config;
   },
   (error) => {
@@ -33,7 +30,6 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Interceptor xử lý response
 axiosInstance.interceptors.response.use(
   (response) => {
     // Log for login responses to see if cookies are being set
@@ -84,23 +80,31 @@ axiosInstance.interceptors.response.use(
           
           try {
             // Try to refresh the token
+            console.log('Attempting to refresh token...');
             await api.refreshToken();
+            console.log('Token refresh successful, retrying original request');
             
             // If refresh successful, retry the original request
             return axiosInstance(originalRequest);
           } catch (refreshError) {
             console.error('Token refresh failed:', refreshError);
             
-            // If refresh fails, redirect to appropriate login page
-            if (typeof window !== 'undefined') {
-              const currentPath = window.location.pathname;
-              const isCompanyAdmin = currentPath.includes('/company-admin');
+            // Get the original error message from the refresh token response
+            const refreshErrorMessage = refreshError.response?.data?.message || refreshError.message || '';
+            const isNoRefreshTokenError = refreshErrorMessage.includes('No refresh token found') || 
+                                        refreshError.response?.status === 400;
+            
+            if (isNoRefreshTokenError) {
+              console.log('No refresh token found - user will stay on current page');
               
-              if (isCompanyAdmin && !currentPath.includes('/company-admin/login')) {
-                window.location.href = '/company-admin/login?session=expired';
-              } else if (!isCompanyAdmin && !currentPath.includes('/login')) {
-                window.location.href = '/login?session=expired';
-              }
+              // Preserve the original refresh error message for the calling context
+              const preservedError = new Error(refreshErrorMessage || 'No refresh token found');
+              preservedError.response = refreshError.response;
+              throw preservedError;
+            } else {
+              console.log('Refresh token failed for other reason:', refreshErrorMessage);
+              // For other refresh token errors, don't redirect yet - let the app handle it
+              throw refreshError;
             }
           }
         } else if (isLogoutRequest) {

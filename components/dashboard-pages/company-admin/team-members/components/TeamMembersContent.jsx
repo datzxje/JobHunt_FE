@@ -26,104 +26,117 @@ const TeamMembersContent = () => {
 
   // Load team members and stats from API
   useEffect(() => {
-    const fetchTeamData = async () => {
-      if (!companyId) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setError("");
-        
-        console.log("Loading team members for company:", companyId);
-        
-        // Fetch team members and stats in parallel
-        const [membersResponse, statsResponse] = await Promise.all([
-          api.getTeamMembers(companyId, { page: 0, size: 100 }),
-          api.getTeamStats(companyId)
-        ]);
-        
-        const members = membersResponse.data?.content || membersResponse.content || [];
-        
-        // Transform backend response to frontend format
-        const transformedMembers = members.map(member => ({
-          id: member.id,
-          name: member.userName,
-          email: member.userEmail,
-          avatar: member.userProfilePicture || "/images/resource/candidate-1.png",
-          role: member.role?.toLowerCase() || "member",
-          department: member.department || "N/A",
-          position: "N/A", // Not available in backend response
-          status: member.status?.toLowerCase() || "active",
-          joinDate: member.joinedAt || member.createdAt,
-          lastLogin: member.updatedAt, // Using updatedAt as proxy for last activity
-          permissions: [] // Not available in backend response
-        }));
-        
-        console.log("Team members loaded:", transformedMembers);
-        setTeamMembers(transformedMembers);
-        setFilteredMembers(transformedMembers);
-        
-        // Set stats from API response
-        const statsData = statsResponse.data || statsResponse;
-        const newStats = {
-          totalMembers: statsData.totalMembers || 0,
-          totalAdmins: statsData.admins || 0,
-          activeEmployers: statsData.activeMembers || 0,
-          pendingRequests: statsData.pendingRequests || 0
-        };
-        setStats(newStats);
-        
-      } catch (err) {
-        console.error("Error loading team data:", err);
-        setError(`Không thể tải dữ liệu nhóm: ${err.message}`);
-        
-        // Fallback to mock data if API fails
-        const mockMembers = [
-          {
-            id: 1,
-            name: "John Smith",
-            email: "john.smith@company.com",
-            avatar: "/images/resource/team-1.jpg",
-            role: "admin",
-            department: "Engineering",
-            position: "Technical Lead",
-            status: "active",
-            joinDate: "2023-01-15",
-            lastLogin: "2024-01-15T10:30:00Z",
-            permissions: ["manage_team", "manage_projects", "admin_access"]
-          },
-          {
-            id: 2,
-            name: "Jane Doe",
-            email: "jane.doe@company.com",
-            avatar: "/images/resource/team-2.jpg",
-            role: "member",
-            department: "Engineering",
-            position: "Senior Developer",
-            status: "active",
-            joinDate: "2023-03-20",
-            lastLogin: "2024-01-14T15:45:00Z",
-            permissions: ["view_projects", "edit_profile"]
-          }
-        ];
-        
-        setTeamMembers(mockMembers);
-        setFilteredMembers(mockMembers);
-        setStats({
-          totalMembers: mockMembers.length,
-          totalAdmins: mockMembers.filter(m => m.role === 'admin').length,
-          activeEmployers: mockMembers.filter(m => m.status === 'active').length,
-          pendingRequests: 0
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchTeamData();
   }, [companyId]);
+
+  const fetchTeamData = async () => {
+    if (!companyId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+      
+      console.log("Loading team members for company:", companyId);
+      
+      // Fetch team members and stats in parallel
+      const [membersResponse, statsResponse] = await Promise.all([
+        api.getTeamMembers(companyId, { page: 0, size: 100 }),
+        api.getTeamStats(companyId)
+      ]);
+      
+      console.log("Team members response:", membersResponse);
+      
+      // membersResponse is now directly the array of members
+      const members = membersResponse || [];
+      console.log("Processing members array:", members);
+      
+      // Transform backend response to frontend format
+      const transformedMembers = members.map(member => ({
+        id: member.id,
+        userId: member.userId,
+        name: member.userName || 'N/A',
+        email: member.userEmail || 'N/A',
+        avatar: member.userProfilePicture || "/images/resource/candidate-1.png",
+        role: (member.role || 'MEMBER').toLowerCase(), // Backend uses ADMIN, HR, etc.
+        department: member.department || "N/A",
+        position: "N/A", // Not available in backend response
+        status: (member.status || 'ACTIVE').toLowerCase(), // Backend uses ACTIVE/INACTIVE
+        joinDate: member.joinedAt || member.createdAt || new Date().toISOString(),
+        lastLogin: member.updatedAt || new Date().toISOString(),
+        permissions: [], // Not available in backend response
+        phone: member.userPhoneNumber || 'N/A',
+        companyId: member.companyId,
+        companyName: member.companyName
+      }));
+      
+      console.log("Transformed members:", transformedMembers);
+      setTeamMembers(transformedMembers);
+      setFilteredMembers(transformedMembers);
+      
+      // Set stats from API response
+      const statsData = statsResponse?.data || statsResponse || {};
+      const newStats = {
+        totalMembers: statsData.totalMembers || 0,
+        totalAdmins: statsData.admins || 0,
+        activeEmployers: statsData.activeMembers || 0,
+        pendingRequests: statsData.pendingRequests || 0
+      };
+      setStats(newStats);
+      
+    } catch (err) {
+      console.error("Error loading team data:", err);
+      setError(`Không thể tải dữ liệu nhóm: ${err.message}`);
+      
+      // Fallback to mock data if API fails
+      const mockMembers = [
+        {
+          id: 1,
+          name: "John Smith",
+          email: "john.smith@company.com",
+          avatar: "/images/resource/team-1.jpg",
+          role: "admin",
+          department: "Engineering",
+          position: "Technical Lead",
+          status: "active",
+          joinDate: "2023-01-15",
+          lastLogin: "2024-01-15T10:30:00Z",
+          permissions: ["manage_team", "manage_projects", "admin_access"]
+        },
+        {
+          id: 2,
+          name: "Jane Doe",
+          email: "jane.doe@company.com",
+          avatar: "/images/resource/team-2.jpg",
+          role: "member",
+          department: "Engineering",
+          position: "Senior Developer",
+          status: "active",
+          joinDate: "2023-03-20",
+          lastLogin: "2024-01-14T15:45:00Z",
+          permissions: ["view_projects", "edit_profile"]
+        }
+      ];
+      
+      setTeamMembers(mockMembers);
+      setFilteredMembers(mockMembers);
+      setStats({
+        totalMembers: mockMembers.length,
+        totalAdmins: mockMembers.filter(m => m.role === 'admin').length,
+        activeEmployers: mockMembers.filter(m => m.status === 'active').length,
+        pendingRequests: 0
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle reload
+  const handleReload = () => {
+    fetchTeamData();
+  };
 
   // Filter members based on selected filter
   useEffect(() => {
@@ -313,7 +326,7 @@ const TeamMembersContent = () => {
     
     return (
       <span className={`badge ${badges[role] || "badge-secondary"}`}>
-        {labels[role] || role}
+        {labels[role] || role.toUpperCase()}
       </span>
     );
   };
@@ -333,7 +346,7 @@ const TeamMembersContent = () => {
     
     return (
       <span className={`badge ${badges[status] || "badge-secondary"}`}>
-        {labels[status] || status}
+        {labels[status] || status.toUpperCase()}
       </span>
     );
   };
@@ -437,6 +450,14 @@ const TeamMembersContent = () => {
               <div className="widget-title">
                 <h4>Thành viên nhóm / Team Members</h4>
                 <div className="chosen-outer">
+                  <button 
+                    className="reload-btn me-3"
+                    onClick={handleReload}
+                    disabled={loading}
+                    title="Tải lại dữ liệu / Reload data"
+                  >
+                    <i className={`la la-refresh ${loading ? 'fa-spin' : ''}`}></i>
+                  </button>
                   <select 
                     className="chosen-single form-select" 
                     value={filter}

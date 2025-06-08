@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../../../../utils/api';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../../context/AuthContext';
@@ -16,30 +16,46 @@ const FormContent = ({ userType = 'candidate' }) => {
     confirmPassword: '',
     phoneNumber: '',
     // Company fields for employers
-    companyOption: '', // 'existing', 'new', 'join'
-    selectedCompanyId: '',
-    companyName: '',
-    companyEmail: '',
-    companyWebsite: ''
+    selectedCompanyId: ''
   });
   
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1); // 1: Personal Info, 2: Company Selection (for employers)
-  const [existingCompanies, setExistingCompanies] = useState([]);
-  const [duplicateWarning, setDuplicateWarning] = useState('');
+  const [companies, setCompanies] = useState([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   
   const router = useRouter();
   const { login } = useAuth();
 
-  // Mock existing companies data - replace with API call
-  const mockCompanies = [
-    { id: 1, name: 'Google', email: 'hr@google.com', website: 'google.com' },
-    { id: 2, name: 'Microsoft', email: 'jobs@microsoft.com', website: 'microsoft.com' },
-    { id: 3, name: 'Apple', email: 'careers@apple.com', website: 'apple.com' }
-  ];
+  // Load companies from API
+  useEffect(() => {
+    if (userType === 'employer') {
+      loadCompanies();
+    }
+  }, [userType]);
+
+  const loadCompanies = async () => {
+    try {
+      setLoadingCompanies(true);
+      const response = await api.getEmployers();
+      setCompanies(response.data || []);
+    } catch (error) {
+      console.error('Error loading companies:', error);
+      // Fallback to mock data
+      setCompanies([
+        { id: 1, name: 'Google', email: 'hr@google.com', website: 'google.com' },
+        { id: 2, name: 'Microsoft', email: 'jobs@microsoft.com', website: 'microsoft.com' },
+        { id: 3, name: 'Apple', email: 'careers@apple.com', website: 'apple.com' },
+        { id: 4, name: 'Amazon', email: 'jobs@amazon.com', website: 'amazon.com' },
+        { id: 5, name: 'Meta', email: 'careers@meta.com', website: 'meta.com' }
+      ]);
+    } finally {
+      setLoadingCompanies(false);
+    }
+  };
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -59,25 +75,6 @@ const FormContent = ({ userType = 'candidate' }) => {
     // Clear general error when user makes changes
     if (error) {
       setError('');
-    }
-
-    // Check for duplicate company when typing company name
-    if (name === 'companyName' && value.length > 2) {
-      checkDuplicateCompany(value);
-    }
-  };
-
-  const checkDuplicateCompany = (companyName) => {
-    const duplicate = mockCompanies.find(company => 
-      company.name.toLowerCase().includes(companyName.toLowerCase())
-    );
-    
-    if (duplicate) {
-      setDuplicateWarning(`Company "${duplicate.name}" already exists. Consider joining instead.`);
-      setExistingCompanies([duplicate]);
-    } else {
-      setDuplicateWarning('');
-      setExistingCompanies([]);
     }
   };
 
@@ -168,41 +165,11 @@ const FormContent = ({ userType = 'candidate' }) => {
   const validateStep2 = () => {
     if (userType !== 'employer') return true;
 
-    const errors = {};
-    let hasErrors = false;
-
-    if (!formData.companyOption) {
-      setError('Please select a company option');
+    if (!formData.selectedCompanyId) {
+      setError('Please select a company to join');
       return false;
     }
-
-    if (formData.companyOption === 'existing' && !formData.selectedCompanyId) {
-      setError('Please select an existing company');
-      return false;
-    }
-
-    if (formData.companyOption === 'new') {
-      if (!formData.companyName || formData.companyName.trim().length < 2) {
-        errors.companyName = 'Company name must be at least 2 characters';
-        hasErrors = true;
-      }
-
-      if (!formData.companyEmail) {
-        errors.companyEmail = 'Company email is required';
-        hasErrors = true;
-      } else if (!validateEmail(formData.companyEmail)) {
-        errors.companyEmail = 'Please enter a valid company email';
-        hasErrors = true;
-      }
-
-      setFieldErrors(errors);
-
-      if (hasErrors) {
-        setError('Please fix all company information errors');
-        return false;
-      }
-    }
-
+    
     return true;
   };
 
@@ -276,13 +243,7 @@ const FormContent = ({ userType = 'candidate' }) => {
 
       // Add company data for employers
       if (userType === 'employer') {
-        signupData.companyData = {
-          option: formData.companyOption,
-          selectedCompanyId: formData.selectedCompanyId,
-          companyName: formData.companyName?.trim(),
-          companyEmail: formData.companyEmail?.trim(),
-          companyWebsite: formData.companyWebsite?.trim()
-        };
+        signupData.companyId = parseInt(formData.selectedCompanyId);
       }
       
       console.log('Attempting to register with:', {
@@ -313,17 +274,36 @@ const FormContent = ({ userType = 'candidate' }) => {
       // Close register modal and redirect after a short delay
       setTimeout(() => {
         if (typeof window !== 'undefined') {
+          // Try multiple methods to close the modal
+          
+          // Method 1: Bootstrap modal dismiss button
           const modalCloseButton = document.querySelector('[data-bs-dismiss="modal"]');
           if (modalCloseButton) {
             modalCloseButton.click();
           }
-        }
-        
-        // Redirect based on user type
-        if (userType === 'employer') {
-          router.push('/employers-dashboard/dashboard');
-        } else {
-          router.push('/candidates-dashboard/dashboard');
+          
+          // Method 2: Try to find and close the signup modal specifically
+          const signupModal = document.querySelector('#registerModal, .modal.show');
+          if (signupModal) {
+            // Try Bootstrap modal API
+            if (window.bootstrap && window.bootstrap.Modal) {
+              const modalInstance = window.bootstrap.Modal.getInstance(signupModal);
+              if (modalInstance) {
+                modalInstance.hide();
+              }
+            }
+            // Fallback: try to click close button within the modal
+            const closeBtn = signupModal.querySelector('.btn-close, .close, [data-bs-dismiss="modal"]');
+            if (closeBtn) {
+              closeBtn.click();
+            }
+          }
+          
+          // Method 3: Remove modal backdrop if exists
+          const backdrop = document.querySelector('.modal-backdrop');
+          if (backdrop) {
+            backdrop.remove();
+          }
         }
       }, 1500);
       
@@ -467,110 +447,41 @@ const FormContent = ({ userType = 'candidate' }) => {
   const renderStep2 = () => (
     <>
       <div className="form-group">
-        <h5>Company Information</h5>
-        <p>How would you like to handle your company profile?</p>
+        <h5>Company Selection</h5>
+        <p>Please select the company you would like to join as an employer.</p>
       </div>
 
       <div className="form-group">
-        <div className="radio-group">
-          <label className="radio-option">
-            <input
-              type="radio"
-              name="companyOption"
-              value="new"
-              checked={formData.companyOption === 'new'}
+        <label>Select Company <span className="required">*</span></label>
+        {loadingCompanies ? (
+          <div className="text-center py-3">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading companies...</span>
+            </div>
+            <p className="mt-2 mb-0">Loading companies...</p>
+          </div>
+        ) : (
+          <>
+            <select
+              name="selectedCompanyId"
+              className="form-select"
+              required
+              value={formData.selectedCompanyId}
               onChange={handleChange}
-            />
-            <span>Create new company profile</span>
-          </label>
-          
-          <label className="radio-option">
-            <input
-              type="radio"
-              name="companyOption"
-              value="existing"
-              checked={formData.companyOption === 'existing'}
-              onChange={handleChange}
-            />
-            <span>Join existing company</span>
-          </label>
-        </div>
+            >
+              <option value="">Choose a company...</option>
+              {companies.map(company => (
+                <option key={company.id} value={company.id}>
+                  {company.name} {company.website && `(${company.website})`}
+                </option>
+              ))}
+            </select>
+            <small className="text-muted">
+              Select the company you want to join. If your company is not listed, please contact our support team.
+            </small>
+          </>
+        )}
       </div>
-
-      {formData.companyOption === 'new' && (
-        <>
-          <div className="form-group">
-            <label>Company Name <span className="required">*</span></label>
-            <input
-              type="text"
-              name="companyName"
-              placeholder="Enter company name"
-              required
-              value={formData.companyName}
-              onChange={handleChange}
-              className={fieldErrors.companyName ? 'error' : ''}
-            />
-            {fieldErrors.companyName && (
-              <span className="field-error">{fieldErrors.companyName}</span>
-            )}
-            {duplicateWarning && (
-              <div className="alert alert-warning mt-2">
-                <small>{duplicateWarning}</small>
-              </div>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label>Company Email <span className="required">*</span></label>
-            <input
-              type="email"
-              name="companyEmail"
-              placeholder="Enter company email"
-              required
-              value={formData.companyEmail}
-              onChange={handleChange}
-              className={fieldErrors.companyEmail ? 'error' : ''}
-            />
-            {fieldErrors.companyEmail && (
-              <span className="field-error">{fieldErrors.companyEmail}</span>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label>Company Website</label>
-            <input
-              type="text"
-              name="companyWebsite"
-              placeholder="Enter company website"
-              value={formData.companyWebsite}
-              onChange={handleChange}
-            />
-          </div>
-        </>
-      )}
-
-      {formData.companyOption === 'existing' && (
-        <div className="form-group">
-          <label>Select Company <span className="required">*</span></label>
-          <select
-            name="selectedCompanyId"
-            className="form-select"
-            required
-            value={formData.selectedCompanyId}
-            onChange={handleChange}
-          >
-            <option value="">Choose a company...</option>
-            {mockCompanies.map(company => (
-              <option key={company.id} value={company.id}>
-                {company.name} ({company.website})
-              </option>
-            ))}
-          </select>
-          <small className="text-muted">
-            Don't see your company? Choose "Create new company profile" instead.
-          </small>
-        </div>
-      )}
 
       <div className="form-group">
         <div className="d-flex gap-3">
@@ -586,22 +497,22 @@ const FormContent = ({ userType = 'candidate' }) => {
             className="theme-btn btn-style-one" 
             type="button"
             onClick={handleSubmit}
-            disabled={isLoading || success}
-        >
-          {isLoading ? (
-            <>
-              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-              Registering...
-            </>
-          ) : success ? (
-            <>
-              <i className="icon-check me-2"></i>
-              Registered!
-            </>
-          ) : (
+            disabled={isLoading || success || loadingCompanies}
+          >
+            {isLoading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Registering...
+              </>
+            ) : success ? (
+              <>
+                <i className="icon-check me-2"></i>
+                Registered!
+              </>
+            ) : (
               'Complete Registration'
-          )}
-        </button>
+            )}
+          </button>
         </div>
       </div>
     </>
@@ -629,7 +540,7 @@ const FormContent = ({ userType = 'candidate' }) => {
               <span>1</span> Personal Info
             </div>
             <div className={`step ${step >= 2 ? 'active' : ''}`}>
-              <span>2</span> Company
+              <span>2</span> Company Selection
             </div>
           </div>
         </div>

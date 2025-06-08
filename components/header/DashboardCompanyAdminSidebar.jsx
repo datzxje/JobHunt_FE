@@ -12,7 +12,7 @@ import "../../styles/company-admin.css";
 
 const DashboardCompanyAdminSidebar = () => {
     const { menu } = useSelector((state) => state.toggle);
-    const { user, company, logout, isAdmin } = useCompanyAdminAuth();
+    const { user, company, logout, isAdmin, pendingRequestsCount } = useCompanyAdminAuth();
 
     const dispatch = useDispatch();
     // menu toggle handler
@@ -73,8 +73,8 @@ const DashboardCompanyAdminSidebar = () => {
                             <Link href={item.routePath}>
                                 <i className={`la ${item.icon}`}></i>{" "}
                                 {item.name}
-                                {item.badge && (
-                                    <span className="nav-badge">{item.badge}</span>
+                                {item.id === 2 && pendingRequestsCount > 0 && (
+                                    <span className="nav-badge">{pendingRequestsCount}</span>
                                 )}
                             </Link>
                         </li>

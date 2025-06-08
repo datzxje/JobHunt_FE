@@ -18,24 +18,44 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        console.log("Checking auth status...");
+        console.log("=== AUTH INITIALIZATION ===");
+        console.log("Checking auth status by calling /auth/me...");
+        
         // Call API endpoint to check if user is logged in
+        // If access token is invalid, this will trigger 401 -> refresh token flow in axios interceptor
         const response = await api.getMe();
         
         // Extract user data from response.data
         const userData = response.data || response;
         
-        // If we get a successful response, the user is logged in (cookies are valid)
+        // If we get a successful response, the user is authenticated (cookies are valid or were refreshed)
         console.log("User is authenticated:", userData);
         setUser(userData);
         setIsLoggedIn(true);
       } catch (error) {
-        console.log("User is not authenticated");
+        console.log("=== AUTH CHECK FAILED ===");
+        console.log("Error checking auth status:", error.message);
+        
+        // Check if this is a "No refresh token found" scenario
+        const errorMessage = error.response?.data?.message || error.message || '';
+        const isNoRefreshTokenError = errorMessage.includes('No refresh token found') || 
+                                    error.response?.status === 400;
+        
+        if (isNoRefreshTokenError) {
+          console.log("No refresh token found - user needs to login");
+        } else {
+          console.log("Other auth error:", errorMessage);
+        }
+        
+        // In all error cases, set user as not authenticated
         setUser(null);
         setIsLoggedIn(false);
+        
+        // Note: Redirect to login is handled by axios interceptor for "No refresh token found" cases
       } finally {
         setLoading(false);
         setInitialized(true);
+        console.log("Auth initialization completed");
       }
     };
 

@@ -12,6 +12,7 @@ export const CompanyAdminAuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [company, setCompany] = useState(null);
   const [companyId, setCompanyId] = useState(null);
+  const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
   const [initialized, setInitialized] = useState(false);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -30,13 +31,14 @@ export const CompanyAdminAuthProvider = ({ children }) => {
 
       console.log("=== COMPANY ADMIN AUTH CHECK ===");
       console.log("Current path:", pathname);
-      console.log("Checking company admin auth status...");
+      console.log("Checking company admin auth status by calling /auth/me...");
       
       // Small delay to ensure cookies are properly set if we just logged in
       await new Promise(resolve => setTimeout(resolve, 200));
       
       try {
         console.log("Calling /auth/me to check authentication...");
+        // This will trigger 401 -> refresh token flow in axios interceptor if needed
         const response = await api.getMe();
         
         // Extract user data from response.data
@@ -73,6 +75,9 @@ export const CompanyAdminAuthProvider = ({ children }) => {
               setCompany(company);
               setCompanyId(firstCompany.companyId);
               console.log("Company admin manages company:", firstCompany.companyId, company);
+              
+              // Fetch pending requests count
+              await fetchPendingRequestsCount(firstCompany.companyId);
             } else {
               console.warn("No managed companies found for ADMIN user");
               // Use fallback for development
@@ -107,19 +112,55 @@ export const CompanyAdminAuthProvider = ({ children }) => {
         
         setIsLoggedIn(true);
       } catch (error) {
-        console.log("Company admin is not authenticated:", error.message);
+        console.log("=== COMPANY ADMIN AUTH CHECK FAILED ===");
+        console.log("Error checking company admin auth status:", error.message);
+        
+        // Check if this is a "No refresh token found" scenario
+        const errorMessage = error.response?.data?.message || error.message || '';
+        const isNoRefreshTokenError = errorMessage.includes('No refresh token found') || 
+                                    error.response?.status === 400;
+        
+        if (isNoRefreshTokenError) {
+          console.log("No refresh token found - company admin needs to login");
+        } else {
+          console.log("Other company admin auth error:", errorMessage);
+        }
+        
+        // In all error cases, set user as not authenticated
         setUser(null);
         setCompany(null);
         setCompanyId(null);
         setIsLoggedIn(false);
+        
+        // Note: Redirect to login is handled by axios interceptor for "No refresh token found" cases
       } finally {
         setLoading(false);
         setInitialized(true);
+        console.log("Company admin auth initialization completed");
       }
     };
 
     checkAuthStatus();
   }, [pathname]);
+
+  // Fetch pending join requests count
+  const fetchPendingRequestsCount = async (companyId) => {
+    try {
+      const response = await api.getJoinRequests(companyId, { status: 'PENDING' });
+      const requests = response?.data || [];
+      setPendingRequestsCount(requests.length);
+    } catch (error) {
+      console.error("Error fetching pending requests count:", error);
+      setPendingRequestsCount(0);
+    }
+  };
+
+  // Refresh pending requests count
+  const refreshPendingRequestsCount = async () => {
+    if (companyId) {
+      await fetchPendingRequestsCount(companyId);
+    }
+  };
 
   // Login function
   const login = async (userData, companyData = null) => {
@@ -161,6 +202,9 @@ export const CompanyAdminAuthProvider = ({ children }) => {
             setCompany(company);
             setCompanyId(firstCompany.companyId);
             console.log("Set company after login:", company);
+            
+            // Fetch pending requests count
+            await fetchPendingRequestsCount(firstCompany.companyId);
           } else {
             console.warn("No managed companies found for ADMIN user after login");
             console.log("Using fallback companyId = 1 for ADMIN user with no companies after login");
@@ -236,7 +280,9 @@ export const CompanyAdminAuthProvider = ({ children }) => {
       initialized, 
       loading,
       hasPermission,
-      isAdmin
+      isAdmin,
+      pendingRequestsCount,
+      refreshPendingRequestsCount
     }}>
       {children}
     </CompanyAdminAuthContext.Provider>
@@ -244,4 +290,10 @@ export const CompanyAdminAuthProvider = ({ children }) => {
 };
 
 // Custom hook to use the company admin auth context
-export const useCompanyAdminAuth = () => useContext(CompanyAdminAuthContext); 
+export const useCompanyAdminAuth = () => {
+  const context = useContext(CompanyAdminAuthContext);
+  if (!context) {
+    throw new Error('useCompanyAdminAuth must be used within a CompanyAdminAuthProvider');
+  }
+  return context;
+}; 

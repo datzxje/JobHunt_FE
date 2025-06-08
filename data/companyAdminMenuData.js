@@ -12,7 +12,7 @@ const companyAdminMenuData = [
     icon: "la-user-plus",
     routePath: "/company-admin/join-requests",
     active: "",
-    badge: "5", // Number of pending requests
+    // badge will be dynamically set from context
   },
   {
     id: 3,

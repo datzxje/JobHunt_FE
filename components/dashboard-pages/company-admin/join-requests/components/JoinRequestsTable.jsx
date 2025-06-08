@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import api from "../../../../../utils/api/api";
 import { useCompanyAdminAuth } from "../../../../../context/CompanyAdminAuthContext";
 
-const JoinRequestsTable = ({ filter = "all" }) => {
+const JoinRequestsTable = forwardRef(({ filter = "all" }, ref) => {
   const [joinRequests, setJoinRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,110 +13,119 @@ const JoinRequestsTable = ({ filter = "all" }) => {
   const [showModal, setShowModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   
-  const { user, companyId } = useCompanyAdminAuth();
+  const { user, companyId, refreshPendingRequestsCount } = useCompanyAdminAuth();
+
+  // Expose handleReload to parent component
+  useImperativeHandle(ref, () => ({
+    handleReload: fetchJoinRequests
+  }));
+
+  // Add debug logging for auth context
+  useEffect(() => {
+    console.log("=== JOIN REQUESTS TABLE AUTH DEBUG ===");
+    console.log("User context:", user);
+    console.log("Company ID:", companyId);
+    console.log("User role:", user?.role);
+    console.log("Is admin:", user?.role === 'ADMIN');
+  }, [user, companyId]);
 
   // Load join requests from API
   useEffect(() => {
-    const fetchJoinRequests = async () => {
-      if (!companyId) {
-        setLoading(false);
+    fetchJoinRequests();
+  }, [companyId, user]);
+
+  const fetchJoinRequests = async () => {
+    if (!companyId) {
+      console.log("No companyId available:", companyId);
+      setLoading(false);
+      return;
+    }
+
+    if (!user) {
+      console.log("No user available:", user);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+      
+      console.log("=== FETCHING JOIN REQUESTS ===");
+      console.log("Company ID:", companyId);
+      console.log("User:", user);
+      console.log("User role:", user.role);
+      console.log("Request params:", { page: 0, size: 100 });
+      
+      const response = await api.getJoinRequests(companyId, {
+        page: 0,
+        size: 100 
+      });
+      
+      console.log("=== API RESPONSE ===");
+      console.log("Raw response:", response);
+      
+      // Extract data from response - fix for actual response format
+      const requests = Array.isArray(response.data) ? response.data : [];
+      console.log("Extracted requests array:", requests);
+      
+      if (!Array.isArray(requests)) {
+        console.error("Invalid response format - expected array:", requests);
+        setError("Invalid response format from server");
         return;
       }
-
-      try {
-        setLoading(true);
-        setError("");
+      
+      // Transform backend response with new requirements
+      const transformedRequests = requests.map(request => {
+        console.log("Processing request:", request);
         
-        console.log("Loading join requests for company:", companyId);
-        
-        // Call real API to get join requests
-        const response = await api.getJoinRequests(companyId, {
-          page: 0,
-          size: 100 // Get all requests for now
-        });
-        
-        const requests = response.data?.content || response.content || [];
-        
-        // Transform backend response to frontend format
-        const transformedRequests = requests.map(request => ({
+        const transformed = {
           id: request.id,
-          candidate: {
-            name: request.userName,
-            email: request.userEmail,
-            avatar: request.userProfilePicture || "/images/resource/candidate-1.png",
-            phone: "N/A", // Not available in backend response
-            location: "N/A", // Not available in backend response  
-            experience: "N/A", // Not available in backend response
-            skills: [] // Not available in backend response
-          },
-          position: "N/A", // Not available in backend response - might need to add this field
-          department: "N/A", // Not available in backend response - might need to add this field
-          requestDate: request.requestedAt || request.createdAt,
+          fullName: request.userName || 'N/A',
+          email: request.userEmail || 'N/A',
+          avatar: request.userProfilePicture || "/images/resource/candidate-1.png",
+          position: request.position || "Employer",
+          department: request.department || "HR",
+          requestDate: request.createdAt ? new Date(request.createdAt).toLocaleDateString('vi-VN') : 'N/A',
           status: request.status?.toLowerCase() || "pending",
           message: request.message || "",
           reviewedBy: request.reviewedByName,
           reviewedAt: request.reviewedAt
-        }));
+        };
         
-        console.log("Join requests loaded:", transformedRequests);
-        setJoinRequests(transformedRequests);
-      } catch (err) {
-        console.error("Error loading join requests:", err);
-        setError(`Không thể tải danh sách yêu cầu: ${err.message}`);
-        
-        // Fallback to mock data if API fails
-        const mockRequests = [
-          {
-            id: 1,
-            candidate: {
-              name: "John Doe",
-              email: "john.doe@example.com",
-              avatar: "/images/resource/candidate-1.png",
-              phone: "+84 123 456 789",
-              location: "Ho Chi Minh City",
-              experience: "5 years",
-              skills: ["React", "Node.js", "JavaScript", "TypeScript"]
-            },
-            position: "Senior Frontend Developer",
-            department: "Engineering",
-            requestDate: "2024-01-15",
-            status: "pending",
-            message: "Tôi rất quan tâm đến vị trí này và muốn đóng góp cho sự phát triển của công ty."
-          },
-          {
-            id: 2,
-            candidate: {
-              name: "Jane Smith",
-              email: "jane.smith@example.com",
-              avatar: "/images/resource/candidate-2.png",
-              phone: "+84 987 654 321",
-              location: "Hanoi",
-              experience: "3 years",
-              skills: ["UI/UX Design", "Figma", "Adobe Creative Suite"]
-            },
-            position: "UI/UX Designer",
-            department: "Design",
-            requestDate: "2024-01-14",
-            status: "approved",
-            message: "I have strong background in user experience design and would love to join your creative team."
-          }
-        ];
-        
-        setJoinRequests(mockRequests);
-      } finally {
-        setLoading(false);
-      }
-    };
+        console.log("Transformed request:", transformed);
+        return transformed;
+      });
+      
+      console.log("Final transformed requests:", transformedRequests);
+      setJoinRequests(transformedRequests);
+    } catch (err) {
+      console.error("=== API ERROR ===");
+      console.error("Error loading join requests:", err);
+      console.error("Error details:", {
+        message: err.message,
+        response: err.response,
+        status: err.response?.status,
+        data: err.response?.data,
+        stack: err.stack
+      });
+      setError(`Không thể tải danh sách yêu cầu: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchJoinRequests();
-  }, [companyId]);
-
-  // Filter requests based on status from parent component
+  // Add debug logging for filtered requests
   useEffect(() => {
+    console.log("Current filter:", filter);
+    console.log("Current joinRequests:", joinRequests);
+    
     if (filter === "all") {
       setFilteredRequests(joinRequests);
     } else {
-      setFilteredRequests(joinRequests.filter(request => request.status === filter));
+      const filtered = joinRequests.filter(request => request.status === filter);
+      console.log("Filtered requests:", filtered);
+      setFilteredRequests(filtered);
     }
   }, [filter, joinRequests]);
 
@@ -145,6 +154,11 @@ const JoinRequestsTable = ({ filter = "all" }) => {
             : request
         )
       );
+      
+      // Refresh pending requests count in context
+      if (refreshPendingRequestsCount) {
+        await refreshPendingRequestsCount();
+      }
       
       console.log("Join request approved successfully");
       setShowModal(false);
@@ -176,6 +190,11 @@ const JoinRequestsTable = ({ filter = "all" }) => {
             : request
         )
       );
+      
+      // Refresh pending requests count in context
+      if (refreshPendingRequestsCount) {
+        await refreshPendingRequestsCount();
+      }
       
       console.log("Join request rejected successfully");
       setShowModal(false);
@@ -254,12 +273,12 @@ const JoinRequestsTable = ({ filter = "all" }) => {
           <table className="default-table manage-job-table">
             <thead>
               <tr>
-                <th>Ứng viên / Candidate</th>
-                <th>Vị trí / Position</th>
-                <th>Phòng ban / Department</th>
-                <th>Ngày yêu cầu / Request Date</th>
-                <th>Trạng thái / Status</th>
-                <th>Hành động / Action</th>
+                <th>Họ và tên</th>
+                <th>Vị trí</th>
+                <th>Phòng ban</th>
+                <th>Ngày yêu cầu</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
               </tr>
             </thead>
 
@@ -271,8 +290,8 @@ const JoinRequestsTable = ({ filter = "all" }) => {
                       <i className="las la-inbox" style={{fontSize: "48px", color: "#ddd"}}></i>
                       <p className="mt-2 mb-0">
                         {filter === "all" 
-                          ? "Không có yêu cầu tham gia nào / No join requests found"
-                          : `Không có yêu cầu nào với trạng thái "${filter}" / No requests with "${filter}" status`
+                          ? "Không có yêu cầu tham gia nào"
+                          : `Không có yêu cầu nào với trạng thái "${filter}"`
                         }
                       </p>
                     </div>
@@ -287,20 +306,20 @@ const JoinRequestsTable = ({ filter = "all" }) => {
                           <div className="content">
                             <span className="company-logo">
                               <img 
-                                src={request.candidate?.avatar || "/images/resource/candidate-1.png"} 
-                                alt={request.candidate?.name}
+                                src={request.avatar}
+                                alt={request.fullName}
                                 style={{width: "40px", height: "40px", borderRadius: "50%"}}
                               />
                             </span>
                             <h4>
                               <a href="#" onClick={() => handleViewDetails(request)}>
-                                {request.candidate?.name}
+                                {request.fullName}
                               </a>
                             </h4>
                             <ul className="job-info">
                               <li>
                                 <span className="icon flaticon-mail"></span>
-                                {request.candidate?.email}
+                                {request.email}
                               </li>
                             </ul>
                           </div>
@@ -309,7 +328,7 @@ const JoinRequestsTable = ({ filter = "all" }) => {
                     </td>
                     <td>{request.position}</td>
                     <td>{request.department}</td>
-                    <td>{new Date(request.requestDate).toLocaleDateString('vi-VN')}</td>
+                    <td>{request.requestDate}</td>
                     <td>{getStatusBadge(request.status)}</td>
                     <td>
                       <div className="option-box">
@@ -318,7 +337,7 @@ const JoinRequestsTable = ({ filter = "all" }) => {
                             <button 
                               onClick={() => handleViewDetails(request)}
                               className="btn btn-sm btn-outline-primary"
-                              title="Xem chi tiết / View Details"
+                              title="Xem chi tiết"
                             >
                               <i className="la la-eye"></i>
                             </button>
@@ -329,7 +348,7 @@ const JoinRequestsTable = ({ filter = "all" }) => {
                                 <button 
                                   onClick={() => handleApprove(request.id)}
                                   className="btn btn-sm btn-success"
-                                  title="Duyệt / Approve"
+                                  title="Duyệt"
                                   disabled={actionLoading}
                                 >
                                   <i className="la la-check"></i>
@@ -339,7 +358,7 @@ const JoinRequestsTable = ({ filter = "all" }) => {
                                 <button 
                                   onClick={() => handleReject(request.id)}
                                   className="btn btn-sm btn-danger"
-                                  title="Từ chối / Reject"
+                                  title="Từ chối"
                                   disabled={actionLoading}
                                 >
                                   <i className="la la-times"></i>
@@ -379,13 +398,13 @@ const JoinRequestsTable = ({ filter = "all" }) => {
                 <div className="row">
                   <div className="col-md-4 text-center">
                     <img 
-                      src={selectedRequest.candidate?.avatar || "/images/resource/candidate-1.png"}
-                      alt={selectedRequest.candidate?.name}
+                      src={selectedRequest.avatar}
+                      alt={selectedRequest.fullName}
                       className="rounded-circle mb-3"
                       style={{width: "120px", height: "120px", objectFit: "cover"}}
                     />
-                    <h5>{selectedRequest.candidate?.name}</h5>
-                    <p className="text-muted">{selectedRequest.candidate?.email}</p>
+                    <h5>{selectedRequest.fullName}</h5>
+                    <p className="text-muted">{selectedRequest.email}</p>
                   </div>
                   <div className="col-md-8">
                     <div className="candidate-info">
@@ -481,6 +500,6 @@ const JoinRequestsTable = ({ filter = "all" }) => {
       {showModal && <div className="modal-backdrop fade show"></div>}
     </>
   );
-};
+});
 
 export default JoinRequestsTable; 

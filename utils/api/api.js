@@ -38,6 +38,10 @@ const endpoints = {
   companyAdminTeamStats: '/company-admin/team-stats',
   myManagedCompanies: '/company-admin/my-companies',
   checkMembership: '/company-admin/check-membership',
+
+  // Company
+  company: (id) => `/companies/${id}`,
+  companies: '/companies'
 };
 
 // API functions
@@ -141,10 +145,19 @@ const api = {
   // Company Admin - Team Members
   getTeamMembers: async (companyId, params = {}) => {
     try {
+      console.log('Calling getTeamMembers with:', { companyId, params });
       const response = await axiosInstance.get(endpoints.companyAdminTeamMembers, { 
-        params: { companyId, ...params } 
+        params: { 
+          companyId,
+          ...params 
+        } 
       });
-      return response;
+      console.log('Team members API response:', response);
+      
+      // Extract data from response - the members array is in response.data
+      const responseData = response?.data || [];
+      console.log('Extracted team members data:', responseData);
+      return responseData;
     } catch (error) {
       console.error('Get team members error:', error);
       throw error;
