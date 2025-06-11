@@ -12,11 +12,22 @@ const endpoints = {
   // Jobs
   jobs: '/jobs',
   job: (id) => `/jobs/${id}`,
+  jobFormDataSkills: '/jobs/form-data/skills',
+  jobFormDataCategories: '/jobs/form-data/categories',
+  jobFormDataLanguages: '/jobs/form-data/languages',
+  applyJob: (id) => `/jobs/${id}/apply`,
+  saveJob: (id) => `/jobs/${id}/save`,
+  unsaveJob: (id) => `/jobs/${id}/save`,
+  savedJobs: '/jobs/saved',
   
-  // Employers
-  employers: '/employers',
-  employer: (id) => `/employers/${id}`,
-  
+  // Job Requirements
+  jobRequirements: (jobId) => `/jobs/${jobId}/requirements`,
+  jobRequirement: (jobId, requirementId) => `/jobs/${jobId}/requirements/${requirementId}`,
+  jobRequirementsBulk: (jobId) => `/jobs/${jobId}/requirements/bulk`,
+  jobRequirementsByType: (jobId, type) => `/jobs/${jobId}/requirements/type/${type}`,
+  jobRequirementsMandatory: (jobId) => `/jobs/${jobId}/requirements/mandatory`,
+  jobRequirementsPriority: (jobId) => `/jobs/${jobId}/requirements/priority`,
+
   // Candidates
   candidates: '/candidates',
   candidate: (id) => `/candidates/${id}`,
@@ -41,7 +52,7 @@ const endpoints = {
 
   // Company
   company: (id) => `/companies/${id}`,
-  companies: '/companies'
+  companiesSelection: '/companies/simple'
 };
 
 // API functions
@@ -87,8 +98,19 @@ const api = {
   updateJob: (id, jobData) => axiosInstance.put(endpoints.job(id), jobData),
   deleteJob: (id) => axiosInstance.delete(endpoints.job(id)),
   
-  // Employers
-  getEmployers: (params) => axiosInstance.get(endpoints.employers, { params }),
+  // Job Form Data
+  getJobFormDataSkills: () => axiosInstance.get(endpoints.jobFormDataSkills),
+  getJobFormDataCategories: () => axiosInstance.get(endpoints.jobFormDataCategories),
+  getJobFormDataLanguages: () => axiosInstance.get(endpoints.jobFormDataLanguages),
+  
+  // Job Actions
+  applyForJob: (id) => axiosInstance.post(endpoints.applyJob(id)),
+  saveJob: (id) => axiosInstance.post(endpoints.saveJob(id)),
+  unsaveJob: (id) => axiosInstance.delete(endpoints.unsaveJob(id)),
+  getSavedJobs: (params) => axiosInstance.get(endpoints.savedJobs, { params }),
+  
+  // Companies
+  getCompanies: (params) => axiosInstance.get(endpoints.companiesSelection, { params }),
   getEmployer: (id) => axiosInstance.get(endpoints.employer(id)),
   
   // Candidates
@@ -259,6 +281,99 @@ const api = {
       return response;
     } catch (error) {
       console.error('Check membership error:', error);
+      throw error;
+    }
+  },
+
+  // Job Requirements
+  createJobRequirement: async (jobId, requirementData) => {
+    try {
+      const response = await axiosInstance.post(endpoints.jobRequirements(jobId), requirementData);
+      return response;
+    } catch (error) {
+      console.error('Create job requirement error:', error);
+      throw error;
+    }
+  },
+
+  createJobRequirementsBulk: async (jobId, requirementsData) => {
+    try {
+      const response = await axiosInstance.post(endpoints.jobRequirementsBulk(jobId), requirementsData);
+      return response;
+    } catch (error) {
+      console.error('Create job requirements bulk error:', error);
+      throw error;
+    }
+  },
+
+  getJobRequirements: async (jobId) => {
+    try {
+      const response = await axiosInstance.get(endpoints.jobRequirements(jobId));
+      return response;
+    } catch (error) {
+      console.error('Get job requirements error:', error);
+      throw error;
+    }
+  },
+
+  getJobRequirement: async (jobId, requirementId) => {
+    try {
+      const response = await axiosInstance.get(endpoints.jobRequirement(jobId, requirementId));
+      return response;
+    } catch (error) {
+      console.error('Get job requirement error:', error);
+      throw error;
+    }
+  },
+
+  updateJobRequirement: async (jobId, requirementId, requirementData) => {
+    try {
+      const response = await axiosInstance.put(endpoints.jobRequirement(jobId, requirementId), requirementData);
+      return response;
+    } catch (error) {
+      console.error('Update job requirement error:', error);
+      throw error;
+    }
+  },
+
+  deleteJobRequirement: async (jobId, requirementId) => {
+    try {
+      const response = await axiosInstance.delete(endpoints.jobRequirement(jobId, requirementId));
+      return response;
+    } catch (error) {
+      console.error('Delete job requirement error:', error);
+      throw error;
+    }
+  },
+
+  getJobRequirementsByType: async (jobId, type) => {
+    try {
+      const response = await axiosInstance.get(endpoints.jobRequirementsByType(jobId, type));
+      return response;
+    } catch (error) {
+      console.error('Get job requirements by type error:', error);
+      throw error;
+    }
+  },
+
+  getMandatoryJobRequirements: async (jobId) => {
+    try {
+      const response = await axiosInstance.get(endpoints.jobRequirementsMandatory(jobId));
+      return response;
+    } catch (error) {
+      console.error('Get mandatory job requirements error:', error);
+      throw error;
+    }
+  },
+
+  getHighPriorityJobRequirements: async (jobId, minWeight = 7) => {
+    try {
+      const response = await axiosInstance.get(endpoints.jobRequirementsPriority(jobId), {
+        params: { minWeight }
+      });
+      return response;
+    } catch (error) {
+      console.error('Get high priority job requirements error:', error);
       throw error;
     }
   },

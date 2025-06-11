@@ -50,7 +50,7 @@ const HeaderNavContent = () => {
           </li>
           {/* End About menu item */}
 
-          <li
+          {/* <li
             className={`${
               isActiveParentChaild(shopItems[0].items, usePathname())
                 ? "current "
@@ -88,7 +88,7 @@ const HeaderNavContent = () => {
               ))}
             </ul>
           </li>
-          {/* End Shop menu items */}
+          End Shop menu items */}
         </ul>
       </nav>
     </>

@@ -40,7 +40,7 @@ const FormContent = ({ userType = 'candidate' }) => {
   const loadCompanies = async () => {
     try {
       setLoadingCompanies(true);
-      const response = await api.getEmployers();
+      const response = await api.getCompanies();
       setCompanies(response.data || []);
     } catch (error) {
       console.error('Error loading companies:', error);

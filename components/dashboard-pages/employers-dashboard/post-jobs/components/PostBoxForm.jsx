@@ -1,20 +1,251 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Select from "react-select";
+import api from "@/utils/api";
+import jobUtils from "@/utils/jobUtils";
+import jobRequirementUtils from "@/utils/jobRequirementUtils";
 
 const PostBoxForm = () => {
+  // Form state
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    requirements: '',
+    salaryMin: '',
+    salaryMax: '',
+    employmentType: '',
+    experienceLevel: '',
+    careerLevel: '',
+    location: '',
+    country: '',
+    city: '',
+    address: '',
+    isRemote: false,
+    applicationDeadline: '',
+    hoursPerWeek: '',
+    genderPreference: 'NO_PREFERENCE',
+    minimumQualification: '',
+    minimumAge: '',
+    maximumAge: '',
+    minimumExperienceYears: '',
+    maximumExperienceYears: '',
+    categoryIds: [],
+    skillIds: [],
+    languageIds: []
+  });
+
+  // API data state
+  const [apiData, setApiData] = useState({
+    skills: [],
+    categories: [],
+    languages: []
+  });
+
+  // UI state
+  const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const [requirements, setRequirements] = useState([]);
+
+  // Fetch form data from APIs
+  useEffect(() => {
+    const fetchFormData = async () => {
+      setLoading(true);
+      try {
+        const data = await jobUtils.getJobFormData();
+        setApiData(data);
+      } catch (error) {
+        console.error('Error fetching form data:', error);
+        // Fallback to static data if API fails
+        setApiData({
+          skills: [
+            { value: 1, label: "JavaScript" },
+            { value: 2, label: "React" },
+            { value: 3, label: "Node.js" },
+            { value: 4, label: "Python" },
+            { value: 5, label: "Java" },
+            { value: 6, label: "PHP" },
+            { value: 7, label: "Angular" },
+            { value: 8, label: "Vue.js" },
+            { value: 9, label: "CSS" },
+            { value: 10, label: "HTML" },
+          ],
+          categories: [
+            { value: 1, label: "Technology" },
+            { value: 2, label: "Banking" },
+            { value: 3, label: "FinTech" },
+            { value: 4, label: "Digital & Creative" },
+            { value: 5, label: "Engineering" },
+            { value: 6, label: "Healthcare" },
+            { value: 7, label: "Education" },
+            { value: 8, label: "Retail" },
+          ],
+          languages: [
+            { value: 1, label: "English" },
+            { value: 2, label: "Vietnamese" },
+            { value: 3, label: "Chinese" },
+            { value: 4, label: "Japanese" },
+            { value: 5, label: "Korean" },
+            { value: 6, label: "French" },
+          ]
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFormData();
+  }, []);
+
+  // Handle form input changes
+  const handleInputChange = (name, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle Select changes for multi-select fields
+  const handleSelectChange = (name, selectedOptions) => {
+    const values = selectedOptions ? selectedOptions.map(option => option.value) : [];
+    setFormData(prev => ({
+      ...prev,
+      [name]: values
+    }));
+  };
+
+  // Submit form data to API
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitLoading(true);
+
+    try {
+      // Validate form data first
+      const validation = jobUtils.validateJobData(formData);
+      if (!validation.isValid) {
+        const errorMessages = Object.values(validation.errors).join('\n');
+        alert(`Please fix the following errors:\n${errorMessages}`);
+        return;
+      }
+
+      // Prepare the request body according to JobRequest DTO
+      const requestBody = {
+        title: formData.title,
+        description: formData.description,
+        requirements: formData.requirements,
+        salaryMin: formData.salaryMin ? parseFloat(formData.salaryMin) : null,
+        salaryMax: formData.salaryMax ? parseFloat(formData.salaryMax) : null,
+        employmentType: formData.employmentType,
+        experienceLevel: formData.experienceLevel,
+        careerLevel: formData.careerLevel,
+        location: formData.location,
+        country: formData.country,
+        city: formData.city,
+        address: formData.address,
+        isRemote: formData.isRemote,
+        applicationDeadline: formData.applicationDeadline ? new Date(formData.applicationDeadline).toISOString() : null,
+        hoursPerWeek: formData.hoursPerWeek,
+        genderPreference: formData.genderPreference,
+        minimumQualification: formData.minimumQualification,
+        minimumAge: formData.minimumAge ? parseInt(formData.minimumAge) : null,
+        maximumAge: formData.maximumAge ? parseInt(formData.maximumAge) : null,
+        minimumExperienceYears: formData.minimumExperienceYears ? parseInt(formData.minimumExperienceYears) : null,
+        maximumExperienceYears: formData.maximumExperienceYears ? parseInt(formData.maximumExperienceYears) : null,
+        categoryIds: formData.categoryIds,
+        skillIds: formData.skillIds,
+        languageIds: formData.languageIds
+      };
+
+      const result = await api.createJob(requestBody);
+      console.log('Job created:', result.data);
+      
+      // Get the created job ID from response
+      const createdJobId = result.data?.data?.id;
+      
+      if (!createdJobId) {
+        console.error('No job ID returned from create job API');
+        alert('Job created but failed to get job ID for saving requirements');
+        resetForm();
+        return;
+      }
+
+      // Save job requirements if any exist
+      if (requirements && requirements.length > 0) {
+        try {
+          console.log('Saving job requirements for job ID:', createdJobId);
+          
+          // Validate requirements before saving
+          const validation = jobRequirementUtils.validateRequirements(requirements);
+          if (!validation.isValid) {
+            console.warn('Requirements validation failed:', validation.errors);
+            alert(`Job created successfully, but some requirements have issues:\n${validation.errors.join('\n')}\n\nPlease edit the job to fix these issues.`);
+          } else {
+            // Save requirements to backend
+            await jobRequirementUtils.saveJobRequirements(createdJobId, requirements);
+            console.log('Job requirements saved successfully');
+          }
+        } catch (requirementError) {
+          console.error('Error saving job requirements:', requirementError);
+          alert(`Job created successfully, but failed to save requirements: ${requirementError.message}\n\nYou can add requirements later by editing the job.`);
+        }
+      }
+      
+      alert('Job posted successfully!');
+      
+      // Reset form
+      resetForm();
+    } catch (error) {
+      console.error('Error submitting job:', error);
+      alert(`Failed to submit job: ${error.message}`);
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  // Reset form to initial state
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      requirements: '',
+      salaryMin: '',
+      salaryMax: '',
+      employmentType: '',
+      experienceLevel: '',
+      careerLevel: '',
+      location: '',
+      country: '',
+      city: '',
+      address: '',
+      isRemote: false,
+      applicationDeadline: '',
+      hoursPerWeek: '',
+      genderPreference: 'NO_PREFERENCE',
+      minimumQualification: '',
+      minimumAge: '',
+      maximumAge: '',
+      minimumExperienceYears: '',
+      maximumExperienceYears: '',
+      categoryIds: [],
+      skillIds: [],
+      languageIds: []
+    });
+    setRequirements([]);
+  };
 
   const specialisms = [
     { value: "Banking", label: "Banking" },
     { value: "Digital & Creative", label: "Digital & Creative" },
     { value: "Retail", label: "Retail" },
     { value: "Human Resources", label: "Human Resources" },
-    { value: "Managemnet", label: "Managemnet" },
+    { value: "Management", label: "Management" },
     { value: "Accounting & Finance", label: "Accounting & Finance" },
     { value: "Digital", label: "Digital" },
     { value: "Creative Art", label: "Creative Art" },
+    { value: "FinTech", label: "FinTech" },
+    { value: "Technology", label: "Technology" },
+    { value: "Engineering", label: "Engineering" },
+    { value: "Product Design", label: "Product Design" },
   ];
 
   const skillsOptions = [
@@ -32,6 +263,14 @@ const PostBoxForm = () => {
     { value: "MongoDB", label: "MongoDB" },
     { value: "Design", label: "Design" },
     { value: "Photoshop", label: "Photoshop" },
+    { value: "Sketch", label: "Sketch" },
+    { value: "InVision", label: "InVision" },
+    { value: "Framer X", label: "Framer X" },
+    { value: "Jira", label: "Jira" },
+    { value: "Confluence", label: "Confluence" },
+    { value: "UX Design", label: "UX Design" },
+    { value: "Product Management", label: "Product Management" },
+    { value: "Agile", label: "Agile" },
     { value: "Marketing", label: "Marketing" },
     { value: "Sales", label: "Sales" },
   ];
@@ -81,6 +320,46 @@ const PostBoxForm = () => {
         : req
     ));
   };
+
+  // Helper function to render weight and mandatory controls
+  const renderWeightAndMandatory = (id, data, colSize = "col-lg-3") => (
+    <>
+      <div className={`form-group ${colSize} col-md-12`}>
+        <label>Weight (1-10)</label>
+        <select 
+          className="chosen-single form-select"
+          value={data.weight || "5"}
+          onChange={(e) => updateRequirement(id, "weight", e.target.value)}
+        >
+          <option value="1">1 - Low Priority</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5 - Medium Priority</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10 - High Priority</option>
+        </select>
+      </div>
+
+      <div className="form-group col-lg-1 col-md-12" style={{ paddingTop: "30px" }}>
+        <div className="form-check">
+          <input
+            className="form-check-input"
+            type="checkbox"
+            checked={data.isMandatory || false}
+            onChange={(e) => updateRequirement(id, "isMandatory", e.target.checked)}
+            style={{ marginRight: "8px" }}
+          />
+          <label className="form-check-label" style={{ fontSize: "12px", fontWeight: "600" }}>
+            Mandatory
+          </label>
+        </div>
+      </div>
+    </>
+  );
 
   const renderRequirement = (requirement) => {
     const { id, type, data } = requirement;
@@ -140,25 +419,7 @@ const PostBoxForm = () => {
                 </select>
               </div>
 
-              <div className="form-group col-lg-4 col-md-12">
-                <label>Weight (1-10)</label>
-                <select 
-                  className="chosen-single form-select"
-                  value={data.weight || "5"}
-                  onChange={(e) => updateRequirement(id, "weight", e.target.value)}
-                >
-                  <option value="1">1 - Low Priority</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5 - Medium Priority</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                  <option value="10">10 - High Priority</option>
-                </select>
-              </div>
+              {renderWeightAndMandatory(id, data)}
             </div>
           </div>
         );
@@ -216,25 +477,7 @@ const PostBoxForm = () => {
                 </select>
               </div>
 
-              <div className="form-group col-lg-4 col-md-12">
-                <label>Weight (1-10)</label>
-                <select 
-                  className="chosen-single form-select"
-                  value={data.weight || "5"}
-                  onChange={(e) => updateRequirement(id, "weight", e.target.value)}
-                >
-                  <option value="1">1 - Low Priority</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5 - Medium Priority</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                  <option value="10">10 - High Priority</option>
-                </select>
-              </div>
+              {renderWeightAndMandatory(id, data)}
             </div>
           </div>
         );
@@ -274,25 +517,7 @@ const PostBoxForm = () => {
                 </select>
               </div>
 
-              <div className="form-group col-lg-4 col-md-12">
-                <label>Weight (1-10)</label>
-                <select 
-                  className="chosen-single form-select"
-                  value={data.weight || "5"}
-                  onChange={(e) => updateRequirement(id, "weight", e.target.value)}
-                >
-                  <option value="1">1 - Low Priority</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5 - Medium Priority</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                  <option value="10">10 - High Priority</option>
-                </select>
-              </div>
+              {renderWeightAndMandatory(id, data)}
             </div>
           </div>
         );
@@ -320,34 +545,17 @@ const PostBoxForm = () => {
                 <Select
                   isMulti
                   name="required-skills"
-                  options={skillsOptions}
+                  options={loading ? [] : apiData.skills}
                   className="basic-multi-select"
                   classNamePrefix="select"
-                  placeholder="Select required skills..."
+                  placeholder={loading ? "Loading skills..." : "Select required skills..."}
                   value={data.skills || []}
                   onChange={(selectedOptions) => updateRequirement(id, "skills", selectedOptions)}
+                  isLoading={loading}
                 />
               </div>
 
-              <div className="form-group col-lg-4 col-md-12">
-                <label>Weight (1-10)</label>
-                <select 
-                  className="chosen-single form-select"
-                  value={data.weight || "5"}
-                  onChange={(e) => updateRequirement(id, "weight", e.target.value)}
-                >
-                  <option value="1">1 - Low Priority</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5 - Medium Priority</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                  <option value="10">10 - High Priority</option>
-                </select>
-              </div>
+              {renderWeightAndMandatory(id, data)}
             </div>
           </div>
         );
@@ -375,34 +583,17 @@ const PostBoxForm = () => {
                 <Select
                   isMulti
                   name="required-languages"
-                  options={languageOptions}
+                  options={loading ? [] : apiData.languages}
                   className="basic-multi-select"
                   classNamePrefix="select"
-                  placeholder="Select required languages..."
+                  placeholder={loading ? "Loading languages..." : "Select required languages..."}
                   value={data.languages || []}
                   onChange={(selectedOptions) => updateRequirement(id, "languages", selectedOptions)}
+                  isLoading={loading}
                 />
               </div>
 
-              <div className="form-group col-lg-4 col-md-12">
-                <label>Weight (1-10)</label>
-                <select 
-                  className="chosen-single form-select"
-                  value={data.weight || "5"}
-                  onChange={(e) => updateRequirement(id, "weight", e.target.value)}
-                >
-                  <option value="1">1 - Low Priority</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5 - Medium Priority</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                  <option value="10">10 - High Priority</option>
-                </select>
-              </div>
+              {renderWeightAndMandatory(id, data)}
             </div>
           </div>
         );
@@ -461,25 +652,7 @@ const PostBoxForm = () => {
                 </select>
               </div>
 
-              <div className="form-group col-lg-4 col-md-12">
-                <label>Weight (1-10)</label>
-                <select 
-                  className="chosen-single form-select"
-                  value={data.weight || "5"}
-                  onChange={(e) => updateRequirement(id, "weight", e.target.value)}
-                >
-                  <option value="1">1 - Low Priority</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5 - Medium Priority</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                  <option value="10">10 - High Priority</option>
-                </select>
-              </div>
+              {renderWeightAndMandatory(id, data)}
             </div>
           </div>
         );
@@ -490,167 +663,240 @@ const PostBoxForm = () => {
   };
 
   return (
-    <form className="default-form">
+    <form className="default-form" onSubmit={handleSubmit}>
       <div className="row">
-        {/* <!-- Input --> */}
+        {/* <!-- Job Title --> */}
         <div className="form-group col-lg-12 col-md-12">
           <label>Job Title</label>
-          <input type="text" name="name" placeholder="Title" />
-        </div>
-
-        {/* <!-- About Company --> */}
-        <div className="form-group col-lg-12 col-md-12">
-          <label>Job Description</label>
-          <textarea placeholder="Spent several years working on sheep on Wall Street. Had moderate success investing in Yugo's on Wall Street. Managed a small team buying and selling Pogo sticks for farmers. Spent several years licensing licorice in West Palm Beach, FL. Developed several new methods for working it banjos in the aftermarket. Spent a weekend importing banjos in West Palm Beach, FL.In this position, the Software Engineer collaborates with Evention's Development team to continuously enhance our current software solutions as well as create new solutions to eliminate the back-office operations and management challenges present"></textarea>
-        </div>
-
-        {/* <!-- Input --> */}
-        <div className="form-group col-lg-6 col-md-12">
-          <label>Email Address</label>
-          <input type="text" name="name" placeholder="" />
-        </div>
-
-        {/* <!-- Input --> */}
-        <div className="form-group col-lg-6 col-md-12">
-          <label>Username</label>
-          <input type="text" name="name" placeholder="" />
-        </div>
-
-        {/* <!-- Search Select --> */}
-        <div className="form-group col-lg-6 col-md-12">
-          <label>Specialisms </label>
-          <Select
-            defaultValue={[specialisms[2]]}
-            isMulti
-            name="colors"
-            options={specialisms}
-            className="basic-multi-select"
-            classNamePrefix="select"
+          <input 
+            type="text" 
+            name="title" 
+            placeholder="e.g. Software Engineer (Android), Libraries"
+            value={formData.title}
+            onChange={(e) => handleInputChange('title', e.target.value)}
+            required
           />
         </div>
 
+        {/* <!-- Job Description --> */}
+        <div className="form-group col-lg-12 col-md-12">
+          <label>Job Description</label>
+          <textarea 
+            placeholder="As a Product Designer, you will work within a Product Delivery Team fused with UX, engineering, product and data talent. You will help the team design beautiful interfaces that solve business challenges for our clients. We work with a number of Tier 1 banks on building web-based applications for AML, KYC and Sanctions List management workflows..."
+            value={formData.description}
+            onChange={(e) => handleInputChange('description', e.target.value)}
+            required
+          />
+        </div>
+
+        {/* <!-- Job Responsibilities & General Requirements --> */}
+        <div className="form-group col-lg-12 col-md-12">
+          <label>Job Responsibilities & General Requirements</label>
+          <textarea 
+            placeholder="Describe key responsibilities, general qualifications, and what the candidate will be expected to do in this role..."
+            value={formData.requirements}
+            onChange={(e) => handleInputChange('requirements', e.target.value)}
+            required
+          />
+        </div>
+
+        {/* <!-- Specialisms --> */}
+        <div className="form-group col-lg-6 col-md-12">
+          <label>Specialisms</label>
+          <Select
+            isMulti
+            name="categoryIds"
+            options={loading ? [] : apiData.categories}
+            className="basic-multi-select"
+            classNamePrefix="select"
+            placeholder={loading ? "Loading categories..." : "Select specialisms..."}
+            onChange={(selectedOptions) => handleSelectChange('categoryIds', selectedOptions)}
+            isLoading={loading}
+          />
+        </div>
+
+        {/* <!-- Job Type --> */}
         <div className="form-group col-lg-6 col-md-12">
           <label>Job Type</label>
-          <select className="chosen-single form-select">
-            <option>Select</option>
-            <option>Banking</option>
-            <option>Digital & Creative</option>
-            <option>Retail</option>
-            <option>Human Resources</option>
-            <option>Management</option>
+          <select 
+            className="chosen-single form-select" 
+            name="employmentType"
+            value={formData.employmentType}
+            onChange={(e) => handleInputChange('employmentType', e.target.value)}
+            required
+          >
+            <option value="">Select Job Type</option>
+            <option value="FULL_TIME">Full Time</option>
+            <option value="PART_TIME">Part Time</option>
+            <option value="FREELANCER">Freelancer</option>
+            <option value="TEMPORARY">Temporary</option>
+            <option value="INTERNSHIP">Internship</option>
           </select>
         </div>
 
-        {/* <!-- Input --> */}
-        <div className="form-group col-lg-6 col-md-12">
-          <label>Offered Salary</label>
-          <select className="chosen-single form-select">
-            <option>Select</option>
-            <option>$1500</option>
-            <option>$2000</option>
-            <option>$2500</option>
-            <option>$3500</option>
-            <option>$4500</option>
-            <option>$5000</option>
-          </select>
+        {/* <!-- Salary Range --> */}
+        <div className="form-group col-lg-3 col-md-6">
+          <label>Minimum Salary</label>
+          <input 
+            type="number" 
+            name="salaryMin" 
+            placeholder="25000"
+            value={formData.salaryMin}
+            onChange={(e) => handleInputChange('salaryMin', e.target.value)}
+          />
         </div>
 
+        <div className="form-group col-lg-3 col-md-6">
+          <label>Maximum Salary</label>
+          <input 
+            type="number" 
+            name="salaryMax" 
+            placeholder="45000"
+            value={formData.salaryMax}
+            onChange={(e) => handleInputChange('salaryMax', e.target.value)}
+          />
+        </div>
+
+        {/* <!-- Career Level --> */}
         <div className="form-group col-lg-6 col-md-12">
           <label>Career Level</label>
-          <select className="chosen-single form-select">
-            <option>Select</option>
-            <option>Banking</option>
-            <option>Digital & Creative</option>
-            <option>Retail</option>
-            <option>Human Resources</option>
-            <option>Management</option>
+          <select 
+            className="chosen-single form-select" 
+            name="careerLevel"
+            value={formData.careerLevel}
+            onChange={(e) => handleInputChange('careerLevel', e.target.value)}
+          >
+            <option value="">Select Career Level</option>
+            <option value="Entry Level">Entry Level</option>
+            <option value="Mid Level">Mid Level</option>
+            <option value="Senior Level">Senior Level</option>
+            <option value="Lead">Lead</option>
+            <option value="Manager">Manager</option>
+            <option value="Director">Director</option>
           </select>
         </div>
 
+        {/* <!-- Experience --> */}
         <div className="form-group col-lg-6 col-md-12">
-          <label>Experience</label>
-          <select className="chosen-single form-select">
-            <option>Select</option>
-            <option>Banking</option>
-            <option>Digital & Creative</option>
-            <option>Retail</option>
-            <option>Human Resources</option>
-            <option>Management</option>
+          <label>Experience Required</label>
+          <select 
+            className="chosen-single form-select" 
+            name="experienceLevel"
+            value={formData.experienceLevel}
+            onChange={(e) => handleInputChange('experienceLevel', e.target.value)}
+            required
+          >
+            <option value="">Select Experience</option>
+            <option value="Fresh">Fresh Graduate</option>
+            <option value="1 Year">1 Year</option>
+            <option value="2 Year">2 Years</option>
+            <option value="3 Year">3 Years</option>
+            <option value="4 Year">4 Years</option>
+            <option value="5+ Year">5+ Years</option>
+            <option value="10+ Year">10+ Years</option>
           </select>
         </div>
 
+
+
+        {/* <!-- Minimum Qualification --> */}
         <div className="form-group col-lg-6 col-md-12">
-          <label>Gender</label>
-          <select className="chosen-single form-select">
-            <option>Select</option>
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
+          <label>Minimum Qualification</label>
+          <select 
+            className="chosen-single form-select" 
+            name="minimumQualification"
+            value={formData.minimumQualification}
+            onChange={(e) => handleInputChange('minimumQualification', e.target.value)}
+          >
+            <option value="">Select Qualification</option>
+            <option value="High School">High School</option>
+            <option value="Certificate">Certificate</option>
+            <option value="Diploma">Diploma</option>
+            <option value="Bachelor">Bachelor's Degree</option>
+            <option value="Master">Master's Degree</option>
+            <option value="PhD">PhD</option>
           </select>
         </div>
 
+        {/* <!-- Gender Preference --> */}
         <div className="form-group col-lg-6 col-md-12">
-          <label>Industry</label>
-          <select className="chosen-single form-select">
-            <option>Select</option>
-            <option>Banking</option>
-            <option>Digital & Creative</option>
-            <option>Retail</option>
-            <option>Human Resources</option>
-            <option>Management</option>
+          <label>Gender Preference</label>
+          <select 
+            className="chosen-single form-select" 
+            name="genderPreference"
+            value={formData.genderPreference}
+            onChange={(e) => handleInputChange('genderPreference', e.target.value)}
+          >
+            <option value="NO_PREFERENCE">No Preference</option>
+            <option value="MALE">Male</option>
+            <option value="FEMALE">Female</option>
+            <option value="OTHER">Other</option>
           </select>
         </div>
 
-        <div className="form-group col-lg-6 col-md-12">
-          <label>Qualification</label>
-          <select className="chosen-single form-select">
-            <option>Select</option>
-            <option>Banking</option>
-            <option>Digital & Creative</option>
-            <option>Retail</option>
-            <option>Human Resources</option>
-            <option>Management</option>
-          </select>
+
+
+        {/* <!-- Location --> */}
+        <div className="form-group col-lg-4 col-md-12">
+          <label>Main Location</label>
+          <input
+            type="text"
+            name="location"
+            placeholder="e.g. London, UK"
+            value={formData.location}
+            onChange={(e) => handleInputChange('location', e.target.value)}
+            required
+          />
         </div>
 
-        {/* <!-- Input --> */}
-        <div className="form-group col-lg-12 col-md-12">
-          <label>Application Deadline Date</label>
-          <input type="text" name="name" placeholder="06.04.2020" />
-        </div>
-
-        {/* <!-- Input --> */}
-        <div className="form-group col-lg-6 col-md-12">
+        {/* <!-- Country --> */}
+        <div className="form-group col-lg-4 col-md-6">
           <label>Country</label>
-          <select className="chosen-single form-select">
-            <option>Australia</option>
-            <option>Pakistan</option>
-            <option>Chaina</option>
-            <option>Japan</option>
-            <option>India</option>
-          </select>
+          <input
+            type="text"
+            name="country"
+            placeholder="e.g. United Kingdom"
+            value={formData.country}
+            onChange={(e) => handleInputChange('country', e.target.value)}
+          />
         </div>
 
-        {/* <!-- Input --> */}
-        <div className="form-group col-lg-6 col-md-12">
+        {/* <!-- City --> */}
+        <div className="form-group col-lg-4 col-md-6">
           <label>City</label>
-          <select className="chosen-single form-select">
-            <option>Melbourne</option>
-            <option>Pakistan</option>
-            <option>Chaina</option>
-            <option>Japan</option>
-            <option>India</option>
-          </select>
+          <input
+            type="text"
+            name="city"
+            placeholder="e.g. London"
+            value={formData.city}
+            onChange={(e) => handleInputChange('city', e.target.value)}
+          />
         </div>
 
-        {/* <!-- Input --> */}
-        <div className="form-group col-lg-12 col-md-12">
+        {/* <!-- Complete Address --> */}
+        <div className="form-group col-lg-8 col-md-8">
           <label>Complete Address</label>
           <input
             type="text"
-            name="name"
+            name="address"
             placeholder="329 Queensberry Street, North Melbourne VIC 3051, Australia."
+            value={formData.address}
+            onChange={(e) => handleInputChange('address', e.target.value)}
           />
+        </div>
+
+        {/* <!-- Remote Work --> */}
+        <div className="form-group col-lg-4 col-md-4">
+          <label>Remote Work</label>
+          <select
+            className="chosen-single form-select"
+            name="isRemote"
+            value={formData.isRemote}
+            onChange={(e) => handleInputChange('isRemote', e.target.value === 'true')}
+          >
+            <option value={false}>Office-based</option>
+            <option value={true}>Remote Allowed</option>
+          </select>
         </div>
 
         {/* <!-- Dynamic Candidate Requirements Section --> */}
@@ -713,9 +959,44 @@ const PostBoxForm = () => {
           </div>
         </div>
 
-        {/* <!-- Input --> */}
+        {/* <!-- Application Deadline --> */}
+        <div className="form-group col-lg-6 col-md-12">
+          <label>Application Deadline</label>
+          <input
+            type="date"
+            name="applicationDeadline"
+            value={formData.applicationDeadline}
+            onChange={(e) => handleInputChange('applicationDeadline', e.target.value)}
+          />
+        </div>
+
+        {/* <!-- Hours per Week --> */}
+        <div className="form-group col-lg-6 col-md-12">
+          <label>Hours per Week</label>
+          <select
+            className="chosen-single form-select"
+            name="hoursPerWeek"
+            value={formData.hoursPerWeek}
+            onChange={(e) => handleInputChange('hoursPerWeek', e.target.value)}
+          >
+            <option value="">Select Hours</option>
+            <option value="20h / week">20h / week</option>
+            <option value="30h / week">30h / week</option>
+            <option value="40h / week">40h / week</option>
+            <option value="50h / week">50h / week</option>
+            <option value="Flexible">Flexible</option>
+          </select>
+        </div>
+
+        {/* <!-- Submit Button --> */}
         <div className="form-group col-lg-12 col-md-12 text-right">
-          <button className="theme-btn btn-style-one">Next</button>
+          <button 
+            type="submit" 
+            className="theme-btn btn-style-one"
+            disabled={submitLoading}
+          >
+            {submitLoading ? 'Posting Job...' : 'Post Job'}
+          </button>
         </div>
       </div>
     </form>
@@ -723,3 +1004,4 @@ const PostBoxForm = () => {
 };
 
 export default PostBoxForm;
+  
