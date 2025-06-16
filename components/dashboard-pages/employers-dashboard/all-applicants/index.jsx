@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import MobileMenu from "../../../header/MobileMenu";
 import DashboardHeader from "../../../header/DashboardHeader";
 import LoginPopup from "../../../common/form/login/LoginPopup";
@@ -9,6 +12,19 @@ import WidgetTopFilterBox from "./components/WidgetTopFilterBox";
 import MenuToggler from "../../MenuToggler";
 
 const index = () => {
+  const [rankedApplications, setRankedApplications] = useState(null);
+  const [isRankedView, setIsRankedView] = useState(false);
+
+  const handleRankedApplicationsChange = (applications) => {
+    setRankedApplications(applications);
+    setIsRankedView(true);
+  };
+
+  const handleBackToNormal = () => {
+    setRankedApplications(null);
+    setIsRankedView(false);
+  };
+
   return (
     <div className="page-wrapper dashboard">
       <span className="header-span"></span>
@@ -41,12 +57,24 @@ const index = () => {
               <div className="ls-widget">
                 <div className="tabs-box">
                   <div className="widget-title">
-                    <h4>Applicant</h4>
-                    <WidgetTopFilterBox />
+                    <h4>
+                      {isRankedView ? (
+                        <button 
+                          onClick={handleBackToNormal}
+                          className="theme-btn btn-style-one"
+                          style={{ padding: '8px 16px', fontSize: '14px' }}
+                        >
+                          <span className="la la-arrow-left"></span> Back to All Applicants
+                        </button>
+                      ) : (
+                        "Applicant"
+                      )}
+                    </h4>
+                    <WidgetTopFilterBox onRankedApplicationsChange={handleRankedApplicationsChange} />
                   </div>
                   {/* End top widget filter bar */}
 
-                  <WidgetContentBox />
+                  <WidgetContentBox rankedApplications={rankedApplications} />
                   {/* End widget-content */}
                 </div>
               </div>
