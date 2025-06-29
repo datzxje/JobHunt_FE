@@ -5,16 +5,42 @@ import {
     addDatePosted,
     addExperienceSelect,
     addJobTypeSelect,
-    addSalary,
 } from "../../../features/filter/filterSlice";
+import SalaryRangeSlider from "./SalaryRangeSlider";
 
 export default function JobSelect() {
     const { jobList } = useSelector((state) => state.filter);
-    const { jobTypeList, datePost, experienceLavel } = useSelector(
-        (state) => state.job
-    );
-
     const dispatch = useDispatch();
+
+    // API-compatible employment types (matches backend enum)
+    const employmentTypes = [
+        { value: "FULL_TIME", label: "Full Time" },
+        { value: "PART_TIME", label: "Part Time" },
+        { value: "CONTRACT", label: "Contract" },
+        { value: "INTERNSHIP", label: "Internship" },
+        { value: "TEMPORARY", label: "Temporary" },
+        { value: "FREELANCER", label: "Freelancer" }
+    ];
+
+    // API-compatible experience levels
+    const experienceLevels = [
+        { value: "Fresh Graduate", label: "Fresh Graduate" },
+        { value: "Junior", label: "Junior (1-2 years)" },
+        { value: "Mid Level", label: "Mid Level (3-5 years)" },
+        { value: "Senior", label: "Senior (5-10 years)" },
+        { value: "Lead", label: "Lead (8+ years)" },
+        { value: "Manager", label: "Manager (10+ years)" }
+    ];
+
+    // Date posted options (keep existing)
+    const datePostedOptions = [
+        { value: "", label: "All Time" },
+        { value: "last-hour", label: "Last Hour" },
+        { value: "last-24-hour", label: "Last 24 Hours" },
+        { value: "last-7-days", label: "Last 7 Days" },
+        { value: "last-14-days", label: "Last 14 Days" },
+        { value: "last-30-days", label: "Last 30 Days" }
+    ];
 
     // job type handler
     const jobTypeHandler = (e) => {
@@ -31,26 +57,22 @@ export default function JobSelect() {
         dispatch(addExperienceSelect(e.target.value));
     };
 
-    // salary handler
-    const salaryHandler = (e) => {
-        const data = JSON.parse(e.target.value);
-        dispatch(addSalary(data));
-    };
+
 
     return (
         <>
             <div className="showing-result">
-                <div className="top-filters">
+                <div className="top-filters" style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
                     <div className="form-group">
                         <select
                             onChange={jobTypeHandler}
                             className="chosen-single form-select"
-                            value={jobList?.jobTypeSelect}
+                            value={jobList?.jobTypeSelect || ""}
                         >
                             <option value="">Job Type</option>
-                            {jobTypeList?.map((item) => (
-                                <option value={item.value} key={item.id}>
-                                    {item.name}
+                            {employmentTypes.map((type) => (
+                                <option value={type.value} key={type.value}>
+                                    {type.label}
                                 </option>
                             ))}
                         </select>
@@ -61,11 +83,11 @@ export default function JobSelect() {
                         <select
                             onChange={datePostHandler}
                             className="chosen-single form-select"
-                            value={jobList?.datePosted}
+                            value={jobList?.datePosted || ""}
                         >
-                            {datePost?.map((item) => (
-                                <option value={item.value} key={item.id}>
-                                    {item.name}
+                            {datePostedOptions.map((option) => (
+                                <option value={option.value} key={option.value}>
+                                    {option.label}
                                 </option>
                             ))}
                         </select>
@@ -76,67 +98,22 @@ export default function JobSelect() {
                         <select
                             onChange={experienceHandler}
                             className="chosen-single form-select"
-                            value={jobList?.experienceSelect}
+                            value={jobList?.experienceSelect || ""}
                         >
-                            <option>Experience Level</option>
-                            {experienceLavel?.map((item) => (
-                                <option value={item.value} key={item.id}>
-                                    {item.name}
+                            <option value="">Experience Level</option>
+                            {experienceLevels.map((level) => (
+                                <option value={level.value} key={level.value}>
+                                    {level.label}
                                 </option>
                             ))}
                         </select>
                     </div>
-                    {/* End ecperience level filter */}
+                    {/* End experience level filter */}
 
-                    <div className="form-group">
-                        <select
-                            onChange={salaryHandler}
-                            className="chosen-single form-select"
-                            value={JSON.stringify(jobList.salary)}
-                        >
-                            <option
-                                value={JSON.stringify({
-                                    min: 0,
-                                    max: 20000,
-                                })}
-                            >
-                                Salary estimate
-                            </option>
-                            <option
-                                value={JSON.stringify({
-                                    min: 0,
-                                    max: 5000,
-                                })}
-                            >
-                                0 - 5000
-                            </option>
-                            <option
-                                value={JSON.stringify({
-                                    min: 5000,
-                                    max: 10000,
-                                })}
-                            >
-                                5000 - 10000
-                            </option>
-                            <option
-                                value={JSON.stringify({
-                                    min: 10000,
-                                    max: 15000,
-                                })}
-                            >
-                                10000 - 15000
-                            </option>
-                            <option
-                                value={JSON.stringify({
-                                    min: 15000,
-                                    max: 20000,
-                                })}
-                            >
-                                15000 - 20000
-                            </option>
-                        </select>
+                    <div className="form-group" style={{ flex: '2', minWidth: '250px' }}>
+                        <SalaryRangeSlider />
                     </div>
-                    {/* End salary estimate filter */}
+                    {/* End salary range filter */}
                 </div>
             </div>
         </>

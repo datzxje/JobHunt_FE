@@ -3,12 +3,16 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Select from "react-select";
+import applicationService from "@/services/applicationService";
+import jobService from "@/services/jobService";
 
 const ApplyJobModalContent = ({ jobId }) => {
   const [candidateProfile, setCandidateProfile] = useState({});
   const [jobRequirements, setJobRequirements] = useState([]);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [cvFile, setCvFile] = useState(null);
 
   const skillsOptions = [
     { value: "JavaScript", label: "JavaScript" },
@@ -48,37 +52,42 @@ const ApplyJobModalContent = ({ jobId }) => {
     try {
       setLoading(true);
       
-      // Mock API calls - replace with actual API endpoints
-      const [jobReqResponse, profileResponse] = await Promise.all([
-        // fetch(`/api/jobs/${jobId}/requirements`),
-        // fetch(`/api/candidate/profile`)
-        new Promise(resolve => setTimeout(() => resolve({
-          data: [
-            { type: "experience", data: { minExperience: "2-3", maxExperience: "5", weight: "8" }},
-            { type: "age", data: { minAge: "25", maxAge: "35", weight: "5" }},
-            { type: "education", data: { minEducation: "Bachelor", weight: "7" }},
-            { type: "skills", data: { skills: [{ value: "React", label: "React" }, { value: "JavaScript", label: "JavaScript" }], weight: "9" }},
-            { type: "languages", data: { languages: [{ value: "English", label: "English" }], weight: "6" }},
-            { type: "salary", data: { minSalary: "50-70K", maxSalary: "100K", weight: "4" }}
-          ]
-        }), 1500)),
-        new Promise(resolve => setTimeout(() => resolve({
-          data: {
-            // Fields that HAVE data (will show ✓ Already provided)
-            experience: "3-5 Years",
-            education: "Bachelor's Degree",
-            skills: [{ value: "React", label: "React" }, { value: "JavaScript", label: "JavaScript" }],
-            
-            // Fields that DON'T have data (will show empty, need to fill)
-            age: "", // No age provided
-            languages: [], // No languages provided  
-            expectedSalary: "" // No salary expectation provided
-          }
-        }), 1500))
-      ]);
+      // Get job details and parse requirements from JSON
+      let requirements = [];
+      try {
+        const jobResponse = await jobService.getJob(jobId);
+        const job = jobResponse.data?.data || jobResponse.data;
+        
+        if (job.jobRequirements) {
+          requirements = JSON.parse(job.jobRequirements);
+        } else {
+          // Default requirements if none specified
+          requirements = [
+            { type: "experience", data: { minExperience: "1-2", maxExperience: "5", weight: "6" }},
+            { type: "education", data: { minEducation: "Bachelor", weight: "5" }}
+          ];
+        }
+      } catch (error) {
+        console.error("Error fetching job details:", error);
+        // Fallback to basic requirements
+        requirements = [
+          { type: "experience", data: { minExperience: "1-2", maxExperience: "5", weight: "6" }},
+          { type: "education", data: { minEducation: "Bachelor", weight: "5" }}
+        ];
+      }
 
-      const requirements = jobReqResponse.data || [];
-      const profile = profileResponse.data || {};
+      // Mock candidate profile - in real app, fetch from user profile API
+      const profile = {
+        // Fields that HAVE data (will show ✓ Already provided)
+        experience: "3-5 Years",
+        education: "Bachelor's Degree",
+        skills: [{ value: "React", label: "React" }, { value: "JavaScript", label: "JavaScript" }],
+        
+        // Fields that DON'T have data (will show empty, need to fill)
+        age: "", // No age provided
+        languages: [], // No languages provided  
+        expectedSalary: "" // No salary expectation provided
+      };
 
       setJobRequirements(requirements);
       setCandidateProfile(profile);
@@ -91,7 +100,7 @@ const ApplyJobModalContent = ({ jobId }) => {
         skills: profile.skills || [],
         languages: profile.languages || [],
         expectedSalary: profile.expectedSalary || "",
-        message: ""
+        coverLetter: ""
       });
 
     } catch (error) {
@@ -110,26 +119,60 @@ const ApplyJobModalContent = ({ jobId }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const applicationData = {
-      jobId,
-      candidateData: formData,
-      cv: e.target.upload.files[0]
-    };
+    setSubmitting(true);
 
     try {
-      // Submit application with all collected data
-      // const response = await fetch('/api/applications', {
-      //   method: 'POST',
-      //   body: formData
-      // });
+      // Get CV file
+      const cvFileInput = e.target.upload.files[0];
+      if (!cvFileInput) {
+        alert("Please upload your CV file.");
+        setSubmitting(false);
+        return;
+      }
+
+      // Prepare application data
+      const applicationData = {
+        jobId: parseInt(jobId),
+        coverLetter: formData.coverLetter || "No cover letter provided.",
+        expectedSalary: parseFloat(formData.expectedSalary) || 0,
+        candidateProfile: {
+          experience: formData.experience,
+          age: formData.age,
+          education: formData.education,
+          skills: formData.skills,
+          languages: formData.languages,
+          expectedSalary: formData.expectedSalary
+        }
+      };
+
+      // Submit application with CV upload
+      const response = await applicationService.applyForJob(applicationData, cvFileInput);
       
-      console.log("Application submitted:", applicationData);
-      alert("Application submitted successfully!");
+      console.log("Application submitted successfully:", response);
+      alert("Application submitted successfully! You will be notified about the status.");
+      
+      // Close modal (if using Bootstrap modal)
+      const modal = document.getElementById('applyJobModal');
+      if (modal) {
+        const bootstrapModal = window.bootstrap?.Modal?.getInstance(modal);
+        if (bootstrapModal) {
+          bootstrapModal.hide();
+        }
+      }
       
     } catch (error) {
       console.error("Error submitting application:", error);
-      alert("Error submitting application. Please try again.");
+      
+      let errorMessage = "Error submitting application. Please try again.";
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -393,15 +436,17 @@ const ApplyJobModalContent = ({ jobId }) => {
             </div>
           )}
 
-          {/* Message Field */}
+          {/* Cover Letter Field */}
         <div className="col-lg-12 col-md-12 col-sm-12 form-group">
+          <label>Cover Letter</label>
           <textarea
             className="darma"
-            name="message"
-              placeholder="Cover Letter / Message (Optional)"
-              value={formData.message}
-              onChange={(e) => updateFormData("message", e.target.value)}
+            name="coverLetter"
+              placeholder="Write your cover letter here... (Required)"
+              value={formData.coverLetter}
+              onChange={(e) => updateFormData("coverLetter", e.target.value)}
               rows="4"
+              required
           ></textarea>
         </div>
 
@@ -426,8 +471,9 @@ const ApplyJobModalContent = ({ jobId }) => {
             className="theme-btn btn-style-one w-100"
             type="submit"
             name="submit-form"
+            disabled={submitting}
           >
-              Submit Application
+              {submitting ? 'Submitting Application...' : 'Submit Application'}
           </button>
           </div>
         </div>

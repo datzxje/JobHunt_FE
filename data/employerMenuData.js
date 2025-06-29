@@ -7,13 +7,6 @@ const employerMenuData = [
     active: "active",
   },
   {
-    id: 2,
-    name: "Post a New Job",
-    icon: "la-paper-plane",
-    routePath: "/employers-dashboard/post-jobs",
-    active: "",
-  },
-  {
     id: 3,
     name: "Manage Jobs",
     icon: "la-briefcase",

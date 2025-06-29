@@ -1,63 +1,108 @@
-const JobDetailsDescriptions = () => {
+const JobDetailsDescriptions = ({ job }) => {
+  // Helper function to parse JSON fields safely
+  const parseJsonField = (field) => {
+    if (!field) return [];
+    if (typeof field === 'string') {
+      try {
+        return JSON.parse(field);
+      } catch (error) {
+        console.warn('Failed to parse JSON field:', field);
+        return [];
+      }
+    }
+    return Array.isArray(field) ? field : [];
+  };
+
+  // Helper function to format requirements text to list
+  const formatRequirements = (requirementsText) => {
+    if (!requirementsText) return [];
+    // Split by bullet points or line breaks
+    return requirementsText
+      .split(/[•\n]/)
+      .map(item => item.trim())
+      .filter(item => item.length > 0);
+  };
+
+  // Default fallback if no job data
+  if (!job) {
+    return (
+      <div className="job-detail">
+        <h4>Loading job details...</h4>
+        <p>Please wait while we load the job information.</p>
+      </div>
+    );
+  }
+
+  const requiredSkills = parseJsonField(job.requiredSkills);
+  const requiredLanguages = parseJsonField(job.requiredLanguages);
+  const requirements = formatRequirements(job.requirements);
+
   return (
     <div className="job-detail">
       <h4>Job Description</h4>
-      <p>
-        As a Product Designer, you will work within a Product Delivery Team
-        fused with UX, engineering, product and data talent. You will help the
-        team design beautiful interfaces that solve business challenges for our
-        clients. We work with a number of Tier 1 banks on building web-based
-        applications for AML, KYC and Sanctions List management workflows. This
-        role is ideal if you are looking to segue your career into the FinTech
-        or Big Data arenas.
-      </p>
-      <h4>Key Responsibilities</h4>
-      <ul className="list-style-three">
-        <li>
-          Be involved in every step of the product design cycle from discovery
-          to developer handoff and user acceptance testing.
-        </li>
-        <li>
-          Work with BAs, product managers and tech teams to lead the Product
-          Design
-        </li>
-        <li>
-          Maintain quality of the design process and ensure that when designs
-          are translated into code they accurately reflect the design
-          specifications.
-        </li>
-        <li>Accurately estimate design tickets during planning sessions.</li>
-        <li>
-          Contribute to sketching sessions involving non-designersCreate,
-          iterate and maintain UI deliverables including sketch files, style
-          guides, high fidelity prototypes, micro interaction specifications and
-          pattern libraries.
-        </li>
-        <li>
-          Ensure design choices are data led by identifying assumptions to test
-          each sprint, and work with the analysts in your team to plan moderated
-          usability test sessions.
-        </li>
-        <li>
-          Design pixel perfect responsive UI’s and understand that adopting
-          common interface patterns is better for UX than reinventing the wheel
-        </li>
-        <li>
-          Present your work to the wider business at Show & Tell sessions.
-        </li>
-      </ul>
-      <h4>Skill & Experience</h4>
-      <ul className="list-style-three">
-        <li>
-          You have at least 3 years’ experience working as a Product Designer.
-        </li>
-        <li>You have experience using Sketch and InVision or Framer X</li>
-        <li>
-          You have some previous experience working in an agile environment –
-          Think two-week sprints.
-        </li>
-        <li>You are familiar using Jira and Confluence in your workflow</li>
-      </ul>
+      <div dangerouslySetInnerHTML={{ __html: job.description }} />
+      
+      {requirements.length > 0 && (
+        <>
+          <h4>Requirements</h4>
+          <ul className="list-style-three">
+            {requirements.map((requirement, index) => (
+              <li key={index}>{requirement}</li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {requiredSkills.length > 0 && (
+        <>
+          <h4>Required Skills</h4>
+          <ul className="list-style-three">
+            {requiredSkills.map((skill, index) => (
+              <li key={index}>{skill}</li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {requiredLanguages.length > 0 && (
+        <>
+          <h4>Language Requirements</h4>
+          <ul className="list-style-three">
+            {requiredLanguages.map((language, index) => (
+              <li key={index}>{language}</li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {job.experienceLevel && (
+        <>
+          <h4>Experience Level</h4>
+          <p>
+            This position requires <strong>{job.experienceLevel.toLowerCase()}</strong> level experience.
+            {job.minimumExperienceYears && job.maximumExperienceYears && (
+              <span> Minimum {job.minimumExperienceYears} to {job.maximumExperienceYears} years of experience required.</span>
+            )}
+          </p>
+        </>
+      )}
+
+      {(job.minimumQualification || job.careerLevel) && (
+        <>
+          <h4>Education & Career Level</h4>
+          <ul className="list-style-three">
+            {job.minimumQualification && (
+              <li>Minimum education: {job.minimumQualification}</li>
+            )}
+            {job.careerLevel && (
+              <li>Career level: {job.careerLevel}</li>
+            )}
+            {job.minimumAge && job.maximumAge && (
+              <li>Age requirement: {job.minimumAge} - {job.maximumAge} years old</li>
+            )}
+          </ul>
+        </>
+      )}
     </div>
   );
 };

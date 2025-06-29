@@ -11,6 +11,7 @@ const endpoints = {
   
   // Jobs
   jobs: '/jobs',
+  jobsSearch: '/jobs/search',
   job: (id) => `/jobs/${id}`,
   rankedApplications: (jobId) => `/jobs/${jobId}/applications/ranked`,
   
@@ -177,6 +178,10 @@ const api = {
   
   // Jobs
   getJobs: (params) => axiosInstance.get(endpoints.jobs, { params }),
+  searchJobs: (params) => {
+    console.log('Searching jobs with params:', params);
+    return axiosInstance.get(endpoints.jobsSearch, { params });
+  },
   getJob: (id) => axiosInstance.get(endpoints.job(id)),
   createJob: (jobData) => axiosInstance.post(endpoints.jobs, jobData),
   updateJob: (id, jobData) => axiosInstance.put(endpoints.job(id), jobData),
@@ -358,6 +363,27 @@ const api = {
       return response;
     } catch (error) {
       console.error('Check membership error:', error);
+      throw error;
+    }
+  },
+
+  // Companies
+  getCompanies: async (params = {}) => {
+    try {
+      const response = await axiosInstance.get(endpoints.companies, { params });
+      return response;
+    } catch (error) {
+      console.error('Get companies error:', error);
+      throw error;
+    }
+  },
+
+  getCompany: async (id) => {
+    try {
+      const response = await axiosInstance.get(endpoints.company(id));
+      return response;
+    } catch (error) {
+      console.error('Get company error:', error);
       throw error;
     }
   },

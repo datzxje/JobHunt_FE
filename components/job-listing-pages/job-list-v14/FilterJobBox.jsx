@@ -193,7 +193,7 @@ const FilterJobBox = () => {
     dispatch(clearDatePostToggle());
     dispatch(clearExperience());
     dispatch(clearExperienceToggle());
-    dispatch(addSalary({ min: 0, max: 20000 }));
+    dispatch(addSalary({ min: 0, max: 10000 }));
     dispatch(addTag(""));
     dispatch(addSort(""));
     dispatch(addPerPage({ start: 0, end: 0 }));
@@ -223,7 +223,7 @@ const FilterJobBox = () => {
           datePosted !== "" ||
           experience?.length !== 0 ||
           salary?.min !== 0 ||
-          salary?.max !== 20000 ||
+          salary?.max !== 10000 ||
           tag !== "" ||
           sort !== "" ||
           perPage.start !== 0 ||

@@ -1,41 +1,43 @@
-
 'use client'
+
 import { useDispatch, useSelector } from "react-redux";
-import { addExperience } from "../../../features/filter/filterSlice";
-import { experienceLavelCheck } from "../../../features/job/jobSlice";
+import { addExperienceLevelNew } from "../../../features/filter/filterSlice";
 
 const ExperienceLevel = () => {
-    const { experienceLavel } = useSelector((state) => state.job) || {};
+    const { jobList } = useSelector((state) => state.filter) || {};
     const dispatch = useDispatch();
 
-    // experience handler
-    const experienceHandler = (e, id) => {
-        dispatch(addExperience(e.target.value));
-        dispatch(experienceLavelCheck(id));
+    // Experience levels
+    const experienceLevels = [
+        { value: "Fresh Graduate", label: "Fresh Graduate" },
+        { value: "Junior", label: "Junior (1-2 years)" },
+        { value: "Mid Level", label: "Mid Level (3-5 years)" },
+        { value: "Senior", label: "Senior (5-10 years)" },
+        { value: "Lead", label: "Lead (8+ years)" },
+        { value: "Manager", label: "Manager (10+ years)" }
+    ];
+
+    // experience level handler
+    const experienceLevelHandler = (e) => {
+        dispatch(addExperienceLevelNew(e.target.value));
     };
 
     return (
-        <ul className="switchbox">
-            {experienceLavel?.map((item) => (
-                <li key={item.id}>
-                    <label className="switch">
-                        <input
-                            type="checkbox"
-                            checked={item.isChecked}
-                            value={item.value}
-                            onChange={(e) => experienceHandler(e, item.id)}
-                        />
-                        <span className="slider round"></span>
-                        <span className="title">{item.name}</span>
-                    </label>
-                </li>
-            ))}
-            <li>
-                <button className="view-more">
-                    <span className="icon flaticon-plus"></span> View More
-                </button>
-            </li>
-        </ul>
+        <>
+            <select
+                className="form-select"
+                value={jobList.experienceLevel}
+                onChange={experienceLevelHandler}
+            >
+                <option value="">Choose experience level</option>
+                {experienceLevels.map((level) => (
+                    <option key={level.value} value={level.value}>
+                        {level.label}
+                    </option>
+                ))}
+            </select>
+            <span className="icon flaticon-graduation-cap"></span>
+        </>
     );
 };
 

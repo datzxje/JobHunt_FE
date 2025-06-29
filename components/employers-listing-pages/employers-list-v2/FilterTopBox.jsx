@@ -1,7 +1,8 @@
 'use client'
 
 import Link from "next/link";
-import companyData from "../../../data/topCompany";
+import { useState, useEffect } from "react";
+import companyService from "../../../services/companyService";
 import Pagination from "../components/Pagination";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -26,6 +27,58 @@ const FilterTopBox = () => {
     perPage,
   } = useSelector((state) => state.employerFilter) || {};
   const dispatch = useDispatch();
+
+  // API state
+  const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    page: 0,
+    size: 12,
+    total: 0,
+    pages: 0
+  });
+
+  // Fetch companies from API
+  const fetchCompanies = async (page = 0, size = 12) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const params = {
+        page,
+        size
+      };
+
+      console.log('Fetching companies with params:', params);
+      const response = await companyService.getAllCompanies(params);
+      console.log('API Response:', response);
+
+      if (response.data) {
+        const mappedCompanies = response.data.map(companyService.mapCompanyData);
+        setCompanies(mappedCompanies);
+        
+        if (response.meta) {
+          setPagination({
+            page: response.meta.page,
+            size: response.meta.size,
+            total: response.meta.total,
+            pages: response.meta.pages
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+      setError('Failed to load companies. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch companies on component mount
+  useEffect(() => {
+    fetchCompanies(pagination.page, pagination.size);
+  }, []);
 
   // keyword filter
   const keywordFilter = (item) =>
@@ -59,8 +112,35 @@ const FilterTopBox = () => {
   const sortFilter = (a, b) =>
     sort === "des" ? a.id > b.id && -1 : a.id < b.id && -1;
 
-  let content = companyData
-    ?.slice(perPage.start !== 0 && 12, perPage.end !== 0 ? perPage.end : 21)
+  // Loading state
+  if (loading) {
+    return (
+      <div className="text-center py-5">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading companies...</span>
+        </div>
+        <p className="mt-3">Loading companies...</p>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="alert alert-danger text-center py-5">
+        <h5>Oops! Something went wrong</h5>
+        <p>{error}</p>
+        <button 
+          className="btn btn-primary"
+          onClick={() => fetchCompanies(pagination.page, pagination.size)}
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  let content = companies
     ?.filter(keywordFilter)
     ?.filter(locationFilter)
     ?.filter(destinationFilter)
@@ -99,7 +179,7 @@ const FilterTopBox = () => {
               </li>
               <li className="me-0">
                 <span className="icon flaticon-briefcase"></span>
-                {company.jobType}
+                {company.industryType || company.jobType}
               </li>
             </ul>
           </div>
@@ -113,6 +193,10 @@ const FilterTopBox = () => {
   const perPageHandler = (e) => {
     const pageData = JSON.parse(e.target.value);
     dispatch(addPerPage(pageData));
+    
+    // Update pagination size and refetch
+    const newSize = pageData.end === 0 ? 12 : pageData.end;
+    fetchCompanies(0, newSize); // Reset to first page with new size
   };
 
   // sort handler
@@ -129,13 +213,16 @@ const FilterTopBox = () => {
     dispatch(addFoundationDate({ min: 1900, max: 2028 }));
     dispatch(addSort(""));
     dispatch(addPerPage({ start: 0, end: 0 }));
+    
+    // Refetch data after clearing filters
+    fetchCompanies(0, 12);
   };
   return (
     <>
       <div className="ls-switcher">
         <div className="showing-result">
           <div className="text">
-            <strong>{content?.length}</strong> jobs
+            <strong>{content?.length}</strong> companies
           </div>
         </div>
         {/* End showing-result */}
@@ -219,7 +306,12 @@ const FilterTopBox = () => {
       <div className="row">{content}</div>
       {/* End .row */}
 
-      <Pagination />
+      <Pagination 
+        currentPage={pagination.page}
+        totalPages={pagination.pages}
+        onPageChange={(page) => fetchCompanies(page, pagination.size)}
+        loading={loading}
+      />
       {/* <!-- Pagination --> */}
     </>
   );

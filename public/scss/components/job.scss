@@ -532,6 +532,16 @@ Job Section
   color: var(--primary-2nd-color);
 }
 
+.job-other-info li.remote {
+  background: rgba(255, 87, 34, 0.15);
+  color: #ff5722;
+}
+
+.job-other-info li.category {
+  background: rgba(0, 150, 136, 0.15);
+  color: #009688;
+}
+
 .job-section .btn-box {
   position: relative;
   text-align: center;

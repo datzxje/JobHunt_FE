@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import jobs from "../../../data/job-featured";
 import Pagination from "../components/Pagination";
 import JobSelect from "../components/JobSelect";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,7 +16,9 @@ import {
   addPerPage,
   addSalary,
   addSort,
+  clearAllFilters,
 } from "../../../features/filter/filterSlice";
+import { useJobSearch } from "../../../hooks/useJobSearch";
 import Image from "next/image";
 
 const FilterJobBox = () => {
@@ -36,6 +37,21 @@ const FilterJobBox = () => {
   const { sort, perPage } = jobSort;
   const dispatch = useDispatch();
   const searchParams = useSearchParams();
+  
+  // Use job search hook
+  const { jobs, loading, error, pagination, handlePageChange, fullReset } = useJobSearch();
+
+  // clear all filters - defined early to avoid reference error
+  const clearAll = async () => {
+    try {
+      console.log('Clearing all filters from FilterJobBox...');
+      dispatch(clearAllFilters());
+      await fullReset();
+      console.log('All filters cleared from FilterJobBox successfully');
+    } catch (error) {
+      console.error('Error clearing filters from FilterJobBox:', error);
+    }
+  };
 
   // Handle URL parameters for automatic filtering
   useEffect(() => {
@@ -45,116 +61,90 @@ const FilterJobBox = () => {
     }
   }, [searchParams, dispatch]);
 
-  // keyword filter on title
-  const keywordFilter = (item) =>
-    keyword !== ""
-      ? item.jobTitle.toLocaleLowerCase().includes(keyword.toLocaleLowerCase())
-      : item;
+  // Render job content from API
+  const renderJobContent = () => {
+    if (loading) {
+      return (
+        <div className="loading-container text-center">
+          <div className="spinner-border" role="status">
+            <span className="sr-only">Loading...</span>
+          </div>
+          <p>Searching jobs...</p>
+        </div>
+      );
+    }
 
-  // location filter
-  const locationFilter = (item) =>
-    location !== ""
-      ? item?.location
-          ?.toLocaleLowerCase()
-          .includes(location?.toLocaleLowerCase())
-      : item;
+    if (error) {
+      return (
+        <div className="error-container text-center">
+          <p className="text-danger">Error: {error}</p>
+          <button 
+            className="btn btn-primary"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </button>
+        </div>
+      );
+    }
 
-  // location filter
-  const destinationFilter = (item) =>
-    item?.destination?.min >= destination?.min &&
-    item?.destination?.max <= destination?.max;
+    if (!jobs || jobs.length === 0) {
+      return (
+        <div className="no-results text-center">
+          <p>No jobs found matching your criteria.</p>
+          <button 
+            className="btn btn-outline-primary"
+            onClick={clearAll}
+          >
+            Clear Filters
+          </button>
+        </div>
+      );
+    }
 
-  // category filter
-  const categoryFilter = (item) =>
-    category !== ""
-      ? item?.category?.toLocaleLowerCase() === category?.toLocaleLowerCase()
-      : item;
-
-  // job-type filter
-  const jobTypeFilter = (item) =>
-    item.jobType !== undefined && jobTypeSelect !== ""
-      ? item?.jobType[0]?.type.toLocaleLowerCase().split(" ").join("-") ===
-          jobTypeSelect && item
-      : item;
-
-  // date-posted filter
-  const datePostedFilter = (item) =>
-    datePosted !== "all" && datePosted !== ""
-      ? item?.created_at
-          ?.toLocaleLowerCase()
-          .split(" ")
-          .join("-")
-          .includes(datePosted)
-      : item;
-
-  // experience level filter
-  const experienceFilter = (item) =>
-    experienceSelect !== ""
-      ? item?.experience?.split(" ").join("-").toLocaleLowerCase() ===
-          experienceSelect && item
-      : item;
-
-  // salary filter
-  const salaryFilter = (item) =>
-    item?.totalSalary?.min >= salary?.min &&
-    item?.totalSalary?.max <= salary?.max;
-
-  // sort filter
-  const sortFilter = (a, b) =>
-    sort === "des" ? a.id > b.id && -1 : a.id < b.id && -1;
-
-  let content = jobs
-    ?.filter(keywordFilter)
-    ?.filter(locationFilter)
-    ?.filter(destinationFilter)
-    ?.filter(categoryFilter)
-    ?.filter(jobTypeFilter)
-    ?.filter(datePostedFilter)
-    ?.filter(experienceFilter)
-    ?.filter(salaryFilter)
-    ?.sort(sortFilter)
-    .slice(perPage.start, perPage.end !== 0 ? perPage.end : 16)
-    ?.map((item) => (
+    return jobs.map((item) => (
       <div className="job-block col-lg-6 col-md-12 col-sm-12" key={item.id}>
         <div className="inner-box">
           <div className="content">
             <span className="company-logo">
-              <Image width={50} height={49} src={item.logo} alt="item brand" />
+              <Image 
+                width={50} 
+                height={49} 
+                src={item.company?.logoUrl || "/images/resource/company-logo/1-1.png"} 
+                alt={item.company?.name || "Company"} 
+              />
             </span>
             <h4>
-              <Link href={`/job-single-v3/${item.id}`}>{item.jobTitle}</Link>
+              <Link href={`/job-single-v3/${item.id}`}>{item.title}</Link>
             </h4>
 
             <ul className="job-info">
               <li>
                 <span className="icon flaticon-briefcase"></span>
-                {item.company}
+                {item.company?.name || "Company"}
               </li>
-              {/* compnay info */}
               <li>
                 <span className="icon flaticon-map-locator"></span>
                 {item.location}
               </li>
-              {/* location info */}
               <li>
-                <span className="icon flaticon-clock-3"></span> {item.time}
+                <span className="icon flaticon-clock-3"></span> 
+                {item.employmentType?.replace('_', ' ')}
               </li>
-              {/* time info */}
               <li>
-                <span className="icon flaticon-money"></span> {item.salary}
+                <span className="icon flaticon-money"></span> 
+                {item.salaryMin && item.salaryMax 
+                  ? `$${item.salaryMin} - $${item.salaryMax}`
+                  : "Negotiable"
+                }
               </li>
-              {/* salary info */}
             </ul>
-            {/* End .job-info */}
 
             <ul className="job-other-info">
-              {item?.jobType?.map((val, i) => (
-                <li key={i} className={`${val.styleClass}`}>
-                  {val.type}
-                </li>
-              ))}
+              <li className="privacy">{item.employmentType?.replace('_', ' ')}</li>
+              {item.isRemote && <li className="remote">Remote</li>}
+              {item.experienceLevel && <li className="time">{item.experienceLevel}</li>}
             </ul>
-            {/* End .job-other-info */}
 
             <button className="bookmark-btn">
               <span className="flaticon-bookmark"></span>
@@ -162,8 +152,10 @@ const FilterJobBox = () => {
           </div>
         </div>
       </div>
-      // End all jobs
     ));
+  };
+
+  let content = renderJobContent();
 
   // sort handler
   const sortHandler = (e) => {
@@ -174,19 +166,6 @@ const FilterJobBox = () => {
   const perPageHandler = (e) => {
     const pageData = JSON.parse(e.target.value);
     dispatch(addPerPage(pageData));
-  };
-
-  // clear all filters
-  const clearAll = () => {
-    dispatch(addKeyword(""));
-    dispatch(addLocation(""));
-    dispatch(addCategory(""));
-    dispatch(addJobTypeSelect(""));
-    dispatch(addDatePosted(""));
-    dispatch(addExperienceSelect(""));
-    dispatch(addSalary({ min: 0, max: 20000 }));
-    dispatch(addSort(""));
-    dispatch(addPerPage({ start: 0, end: 0 }));
   };
 
   return (
@@ -203,7 +182,7 @@ const FilterJobBox = () => {
           datePosted !== "" ||
           experienceSelect !== "" ||
           salary?.min !== 0 ||
-          salary?.max !== 20000 ||
+          salary?.max !== 10000 ||
           sort !== "" ||
           perPage.start !== 0 ||
           perPage.end !== 0 ? (
@@ -274,7 +253,24 @@ const FilterJobBox = () => {
       <div className="row">{content}</div>
       {/* End .row with jobs */}
 
-      <Pagination />
+      {!loading && !error && jobs.length > 0 && (
+        <div className="pagination-wrapper">
+          <div className="showing-result">
+            <div className="text">
+              Showing <strong>{pagination.current * pagination.size + 1}</strong> to{" "}
+              <strong>
+                {Math.min((pagination.current + 1) * pagination.size, pagination.totalElements)}
+              </strong>{" "}
+              of <strong>{pagination.totalElements}</strong> results
+            </div>
+          </div>
+          <Pagination 
+            currentPage={pagination.current} 
+            totalPages={pagination.totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
+      )}
       {/* <!-- End Pagination --> */}
     </>
   );

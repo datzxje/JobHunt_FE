@@ -1,5 +1,8 @@
+'use client'
+
 import dynamic from "next/dynamic";
-import employersInfo from "@/data/topCompany";
+import { useState, useEffect } from "react";
+import companyService from "@/services/companyService";
 import LoginPopup from "@/components/common/form/login/LoginPopup";
 import FooterDefault from "@/components/footer/common-footer";
 import DefaulHeader from "@/components/header/DefaulHeader";
@@ -11,16 +14,123 @@ import Social from "@/components/employer-single-pages/social/Social";
 import PrivateMessageBox from "@/components/employer-single-pages/shared-components/PrivateMessageBox";
 import Image from "next/image";
 
-export const metadata = {
-  title: "Company Single || JobHunt - Employment Marketplace",
-  description: "JobHunt - Employment Marketplace",
-};
-
 const CompanySingle = ({ params }) => {
   const id = params.id;
 
-  const employer =
-    employersInfo.find((item) => item.id == id) || employersInfo[0];
+  // State management
+  const [company, setCompany] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch company data
+  useEffect(() => {
+    const fetchCompany = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log('Fetching company with ID:', id);
+        const response = await companyService.getCompany(id);
+        console.log('Company response:', response);
+
+        if (response.data) {
+          setCompany(response.data);
+          
+          // Update document title dynamically
+          document.title = `${response.data.name} || JobHunt - Employment Marketplace`;
+        }
+      } catch (error) {
+        console.error('Error fetching company:', error);
+        setError('Failed to load company information. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchCompany();
+    }
+  }, [id]);
+
+  // Loading state
+  if (loading) {
+    return (
+      <>
+        <span className="header-span"></span>
+        <LoginPopup />
+        <DefaulHeader />
+        <MobileMenu />
+        
+        <section className="job-detail-section">
+          <div className="auto-container">
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status" style={{ width: '3rem', height: '3rem' }}>
+                <span className="visually-hidden">Loading company...</span>
+              </div>
+              <p className="mt-3 h5">Loading company information...</p>
+            </div>
+          </div>
+        </section>
+        
+        <FooterDefault footerStyle="alternate5" />
+      </>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <>
+        <span className="header-span"></span>
+        <LoginPopup />
+        <DefaulHeader />
+        <MobileMenu />
+        
+        <section className="job-detail-section">
+          <div className="auto-container">
+            <div className="alert alert-danger text-center py-5">
+              <h3>Oops! Something went wrong</h3>
+              <p>{error}</p>
+              <button 
+                className="btn btn-primary"
+                onClick={() => window.location.reload()}
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </section>
+        
+        <FooterDefault footerStyle="alternate5" />
+      </>
+    );
+  }
+
+  // Company not found
+  if (!company) {
+    return (
+      <>
+        <span className="header-span"></span>
+        <LoginPopup />
+        <DefaulHeader />
+        <MobileMenu />
+        
+        <section className="job-detail-section">
+          <div className="auto-container">
+            <div className="alert alert-warning text-center py-5">
+              <h3>Company Not Found</h3>
+              <p>The company you're looking for doesn't exist or has been removed.</p>
+              <a href="/company/list" className="btn btn-primary">
+                Browse All Companies
+              </a>
+            </div>
+          </div>
+        </section>
+        
+        <FooterDefault footerStyle="alternate5" />
+      </>
+    );
+  }
 
   return (
     <>
@@ -48,38 +158,38 @@ const CompanySingle = ({ params }) => {
                     <Image
                       width={100}
                       height={100}
-                      src={employer?.img}
-                      alt="logo"
+                      src={company?.logoUrl || '/images/resource/company-logo/default.png'}
+                      alt={`${company?.name} logo`}
                     />
                   </span>
-                  <h4>{employer?.name}</h4>
+                  <h4>{company?.name}</h4>
 
                   <ul className="job-info">
                     <li>
                       <span className="icon flaticon-map-locator"></span>
-                      {employer?.location}
+                      {company?.city && company?.country ? `${company.city}, ${company.country}` : company?.address || 'Location not specified'}
                     </li>
-                    {/* compnay info */}
+                    {/* company info */}
                     <li>
                       <span className="icon flaticon-briefcase"></span>
-                      {employer?.jobType}
+                      {company?.industryType || 'Not specified'}
                     </li>
                     {/* location info */}
                     <li>
                       <span className="icon flaticon-telephone-1"></span>
-                      {employer?.phone}
+                      {company?.phoneNumber || 'Not available'}
                     </li>
                     {/* time info */}
                     <li>
                       <span className="icon flaticon-mail"></span>
-                      {employer?.email}
+                      {company?.email || 'Not available'}
                     </li>
                     {/* salary info */}
                   </ul>
                   {/* End .job-info */}
 
                   <ul className="job-other-info">
-                    <li className="time">Open Jobs – {employer.jobNumber}</li>
+                    <li className="time">Open Jobs – {company?.activeJobsCount || 0}</li>
                   </ul>
                   {/* End .job-other-info */}
                 </div>
@@ -110,7 +220,7 @@ const CompanySingle = ({ params }) => {
                     <div className="apply-modal-content modal-content">
                       <div className="text-center">
                         <h3 className="title">
-                          Send message to {employer.name}
+                          Send message to {company.name}
                         </h3>
                         <button
                           type="button"
@@ -141,20 +251,20 @@ const CompanySingle = ({ params }) => {
             <div className="row">
               <div className="content-column col-lg-8 col-md-12 col-sm-12">
                 {/*  job-detail */}
-                <JobDetailsDescriptions />
+                <JobDetailsDescriptions company={company} />
                 {/* End job-detail */}
 
                 {/* <!-- Related Jobs --> */}
                 <div className="related-jobs">
                   <div className="title-box">
-                    <h3>3 Others jobs available</h3>
+                    <h3>{company?.activeJobsCount > 0 ? `${company.activeJobsCount} job${company.activeJobsCount > 1 ? 's' : ''} available at ${company.name}` : 'No jobs available at this company'}</h3>
                     <div className="text">
-                      2020 jobs live - 293 added today.
+                      {company?.activeJobsCount > 0 ? 'Explore exciting career opportunities.' : 'Check back later for new openings.'}
                     </div>
                   </div>
                   {/* End .title-box */}
 
-                  <RelatedJobs />
+                  {company?.activeJobsCount > 0 && <RelatedJobs />}
                   {/* End RelatedJobs */}
                 </div>
                 {/* <!-- Related Jobs --> */}
@@ -165,41 +275,57 @@ const CompanySingle = ({ params }) => {
                 <aside className="sidebar">
                   <div className="sidebar-widget company-widget">
                     <div className="widget-content">
-                      {/*  compnay-info */}
+                      {/*  company-info */}
                       <ul className="company-info mt-0">
                         <li>
-                          Primary industry: <span>Software</span>
+                          Primary industry: <span>{company?.industryType || 'Software'}</span>
                         </li>
                         <li>
-                          Company size: <span>501-1,000</span>
+                          Company size: <span>{company?.teamSize || '501-1,000'}</span>
                         </li>
                         <li>
-                          Founded in: <span>2011</span>
+                          Founded in: <span>{company?.establishmentYear || '2011'}</span>
                         </li>
                         <li>
-                          Phone: <span>{employer?.phone}</span>
+                          Phone: <span>{company?.phoneNumber || 'Not available'}</span>
                         </li>
                         <li>
-                          Email: <span>{employer?.email}</span>
+                          Email: <span>{company?.email || 'Not available'}</span>
                         </li>
                         <li>
-                          Location: <span>{employer?.location}</span>
+                          Location: <span>{company?.city && company?.country ? `${company.city}, ${company.country}` : company?.address || 'Location not specified'}</span>
                         </li>
+                        {company?.averageRating > 0 && (
+                          <li>
+                            Rating: <span>{company.averageRating.toFixed(1)}/5.0 ({company.totalReviews} reviews)</span>
+                          </li>
+                        )}
                         <li>
                           Social media:
                           <Social />
                         </li>
                       </ul>
-                      {/* End compnay-info */}
+                      {/* End company-info */}
 
                       <div className="btn-box">
-                        <a
-                          href="#"
-                          className="theme-btn btn-style-three"
-                          style={{ textTransform: "lowercase" }}
-                        >
-                          {employer?.email}
-                        </a>
+                        {company?.websiteUrl ? (
+                          <a
+                            href={company.websiteUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="theme-btn btn-style-three"
+                          >
+                            Visit Website
+                          </a>
+                        ) : (
+                          <a
+                            href={`mailto:${company?.email}`}
+                            className="theme-btn btn-style-three"
+                            style={{ textTransform: "lowercase" }}
+                          >
+                            {company?.email || 'Contact Us'}
+                          </a>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -14,6 +14,16 @@ export const findJobItems = [
       },
     ],
   },
+  {
+    id: 2,
+    title: "Urgent Jobs",
+    items: [
+      {
+        name: "Urgent Jobs",
+        routePath: "/urgent-jobs",
+      },
+    ],
+  },
 ];
 
 export const employerItems = {

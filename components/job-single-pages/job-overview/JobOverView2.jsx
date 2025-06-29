@@ -1,40 +1,71 @@
-const JobOverView2 = () => {
+const JobOverView2 = ({ job }) => {
+  // Helper function to format date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Recently';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  // Helper function to format employment type
+  const formatEmploymentType = (type) => {
+    const typeMap = {
+      'FULL_TIME': 'Full Time',
+      'PART_TIME': 'Part Time', 
+      'CONTRACT': 'Contract',
+      'TEMPORARY': 'Temporary',
+      'INTERNSHIP': 'Internship'
+    };
+    return typeMap[type] || type;
+  };
+
+  // Helper function to format salary
+  const formatSalary = () => {
+    if (job?.salaryMin && job?.salaryMax) {
+      return `$${job.salaryMin} - $${job.salaryMax}`;
+    } else if (job?.salaryMin) {
+      return `$${job.salaryMin}+`;
+    }
+    return 'Negotiable';
+  };
+
+  // Default fallback if no job data
+  if (!job) {
+    return (
+      <ul>
+        <li>
+          <i className="icon icon-calendar"></i>
+          <h5>Loading...</h5>
+          <span>Please wait</span>
+        </li>
+      </ul>
+    );
+  }
+
   return (
     <ul>
       <li>
         <i className="icon icon-calendar"></i>
         <h5>Date Posted:</h5>
-        <span>Posted 1 hours ago</span>
+        <span>{formatDate(job.createdAt)}</span>
       </li>
       <li>
         <i className="icon icon-expiry"></i>
         <h5>Expiration date:</h5>
-        <span>April 06, 2021</span>
+        <span>{job.applicationDeadline ? formatDate(job.applicationDeadline) : 'Open'}</span>
       </li>
       <li>
         <i className="icon icon-location"></i>
         <h5>Location:</h5>
-        <span>London, UK</span>
-      </li>
-      <li>
-        <i className="icon icon-user-2"></i>
-        <h5>Job Title:</h5>
-        <span>Designer</span>
-      </li>
-      <li>
-        <i className="icon icon-clock"></i>
-        <h5>Hours:</h5>
-        <span>50h / week</span>
-      </li>
-      <li>
-        <i className="icon icon-rate"></i>
-        <h5>Rate:</h5>
-        <span>$15 - $25 / hour</span>
+        <span>{job.location}</span>
       </li>
       <li>
         <i className="icon icon-salary"></i>
         <h5>Salary:</h5>
-        <span>$35k - $45k</span>
+        <span>{formatSalary()}</span>
       </li>
     </ul>
   );

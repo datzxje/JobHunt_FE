@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { calculateDistance } from '../../utils/locationUtils';
 
 const UrgentJobList = ({ jobs, userLocation }) => {
   const [sortBy, setSortBy] = useState('distance'); // 'distance' or 'time'

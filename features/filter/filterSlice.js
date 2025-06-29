@@ -4,11 +4,17 @@ const initialState = {
     jobList: {
         keyword: "",
         location: "",
+        city: "",
+        category: "",
+        skill: "",
+        employmentType: "",
+        experienceLevel: "",
+        isRemote: false,
         destination: {
             min: 0,
             max: 100,
         },
-        category: "",
+        // Legacy fields for compatibility
         jobType: [],
         jobTypeSelect: "",
         datePosted: "",
@@ -16,7 +22,7 @@ const initialState = {
         experienceSelect: "",
         salary: {
             min: 0,
-            max: 20000,
+            max: 10000,
         },
         tag: "",
     },
@@ -95,6 +101,28 @@ export const filterSlice = createSlice({
             state.jobSort.perPage.start = payload.start;
             state.jobSort.perPage.end = payload.end;
         },
+        // New reducers for backend API compatibility
+        addCity: (state, { payload }) => {
+            state.jobList.city = payload;
+        },
+        addSkill: (state, { payload }) => {
+            state.jobList.skill = payload;
+        },
+        addEmploymentType: (state, { payload }) => {
+            state.jobList.employmentType = payload;
+        },
+        addExperienceLevelNew: (state, { payload }) => {
+            state.jobList.experienceLevel = payload;
+        },
+        addIsRemote: (state, { payload }) => {
+            state.jobList.isRemote = payload;
+        },
+        // Clear all filters
+        clearAllFilters: (state) => {
+            state.jobList = {
+                ...initialState.jobList
+            };
+        },
     },
 });
 
@@ -114,5 +142,12 @@ export const {
     addTag,
     addSort,
     addPerPage,
+    // New actions
+    addCity,
+    addSkill,
+    addEmploymentType,
+    addExperienceLevelNew,
+    addIsRemote,
+    clearAllFilters,
 } = filterSlice.actions;
 export default filterSlice.reducer;
